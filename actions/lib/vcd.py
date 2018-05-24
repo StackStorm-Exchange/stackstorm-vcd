@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import requests
 import xmltodict
 
-import collections
 from st2actions.runners.pythonrunner import Action
 
 
@@ -50,8 +50,8 @@ class VCDBaseActions(Action):
     def get_sessionid(self):
         url = 'https://%s/api/sessions' % self.vcd_host
         headers = {'Accept': 'application/*+xml;version=5.1'}
-        p = requests.post(url, headers=headers, auth=(self.vcd_user +
-                          "@SYSTEM", self.vcd_pass), verify=self.vcd_ssl)
+        p = requests.post(url, headers=headers,
+                          auth=(self.vcd_user + "@SYSTEM", self.vcd_pass), verify=self.vcd_ssl)
         self.vcd_auth = p.headers['x-vcloud-authorization']
 
         return self.vcd_auth
@@ -71,8 +71,7 @@ class VCDBaseActions(Action):
 
         pvdc_data['id'] = jdata['vmext:VMWProviderVdc']['@id'].split(
                                 'providervdc:', 1)[-1]
-        pvdc_data['enabled'] = jdata['vmext:VMWProviderVdc'][
-                                     'vcloud:IsEnabled']
+        pvdc_data['enabled'] = jdata['vmext:VMWProviderVdc']['vcloud:IsEnabled']
 
         for item in jdata['vmext:VMWProviderVdc']['vcloud:AvailableNetworks'][
                 'vcloud:Network']:
