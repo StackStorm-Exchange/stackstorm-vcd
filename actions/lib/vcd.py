@@ -71,9 +71,9 @@ class VCDBaseActions(Action):
         jdata = self.vcd_get(endpoint)
 
         pvdc_data['id'] = jdata['vmext:VMWProviderVdc']['@id'].split(
-                                'providervdc:', 1)[-1]
+            'providervdc:', 1)[-1]
         pvdc_data['enabled'] = jdata['vmext:VMWProviderVdc'][
-                                     'vcloud:IsEnabled']
+            'vcloud:IsEnabled']
 
         for item in jdata['vmext:VMWProviderVdc']['vcloud:AvailableNetworks'][
                 'vcloud:Network']:
@@ -164,7 +164,7 @@ class VCDBaseActions(Action):
         jdata = self.vcd_get(endpoint)
 
         for network in jdata['vmext:VMWNetworkPoolReferences'][
-                             'vmext:NetworkPoolReference']:
+                'vmext:NetworkPoolReference']:
             network_pools[network['@name']] = {}
             network_pools[network['@name']]['href'] = network['@href']
 
