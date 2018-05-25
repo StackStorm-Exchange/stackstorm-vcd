@@ -22,4 +22,3 @@ from get_pvdcs import getPVDCs
 class GetPVDCsActionTestCase(VCloudBaseActionTestCase):
     __test__ = True
     action_cls = getPVDCs
-

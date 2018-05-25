@@ -22,4 +22,3 @@ from get_org import getORG
 class GetORGActionTestCase(VCloudBaseActionTestCase):
     __test__ = True
     action_cls = getORG
-
