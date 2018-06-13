@@ -1,0 +1,18 @@
+---
+  name: "get_vapp"
+  runner_type: "python-script"
+  description: "Retrieve details for a vApp"
+  enabled: true
+  entry_point: "get_vapp.py"
+  parameters:
+    vcloud:
+      type: "string"
+      description: "Which vcloud to connect to"
+      required: false
+      position: 0
+    vapp_ref:
+      type: "string"
+      description: "vApp reference"
+      required: true
+      position: 1
+
