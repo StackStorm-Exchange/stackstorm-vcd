@@ -27,3 +27,115 @@ vclouds:
       type: "boolean"
       required: false
 
+defaults:
+  type: "object"
+  properties:
+    org:
+      type: "object"
+      properties:
+        Settings:
+          type: "object"
+          properties:
+            OrgGeneralSettings:
+              type: "object"
+              properties:
+                CanPublishCatalogs:
+                  type: "boolean"
+                  required: false
+                DeployedVMQuota:
+                  type: "integer"
+                  required: false
+                StoredVmQuota:
+                  type: "integer"
+                  required: false
+                UseServerBootSequence:
+                  type: "boolean"
+                  required: false
+                DelayAfterPowerOnSeconds:
+                  type: "integer"
+                  required: false
+            VAppLeaseSettings:
+              type: "object"
+              properties:
+                DeleteOnStorageLeaseExpiration:
+                  type: "boolean"
+                  required: false
+                DeploymentLeaseSeconds:
+                  type: "integer"
+                  required: false
+                StorageLeaseSeconds:
+                  type: "integer"
+                  required: false
+            OrgPasswordPolicySettings:
+              type: "object"
+              properties:
+                AccountLockoutEnabled:
+                  type: "boolean"
+                  required: false
+                InvalidLoginsBeforeLockout:
+                  type: "integer"
+                  required: false
+                AccountLockoutIntervalMinutes:
+                  type: "integer"
+                  required: false
+            OrgOperationLimitsSettings:
+              type: "object"
+              properties:
+                ConsolesPerVmLimit:
+                  type: "integer"
+                  required: false
+                OperationsPerUser:
+                  type: "integer"
+                  required: false
+                OperationsPerOrg:
+                  type: "integer"
+                  required: false
+            VAppTemplateLeaseSettings:
+              type: "object"
+              properties:
+                DeleteOnStorageLeaseExpiration:
+                  type: "boolean"
+                  required: false
+                StorageLeaseSeconds:
+                  type: "integer"
+                  required: false
+    vdc:
+      type: "object"
+      properties:
+        AllocationModel:
+          type: "string"
+          required: false
+        NetworkQuota:
+          type: "integer"
+          required: false
+        IsThinProvision:
+          type: "boolean"
+          required: false
+        ComputeCapacity:
+          type: "object"
+          properties:
+            Cpu:
+              type: "object"
+              properties:
+                Units: 
+                  type: "string"
+                  required: false
+                Allocatedpercent:
+                  type: "integer"
+                  required: false
+                Limit:
+                  type: "integer"
+                  required: false
+            Memory:
+              type: "object"
+              properties:
+                Units:
+                  type: "string"
+                  required: false
+                Allocatedpercent:
+                  type: "integer"
+                  required: false
+                Limit:
+                  type: "integer"
+                  required: false
+
