@@ -1,0 +1,13 @@
+---
+  name: "get_vsphere"
+  runner_type: "python-script"
+  description: "Retrieve VSphere servers "
+  enabled: true
+  entry_point: "get_vsphere.py"
+  parameters:
+    vcloud:
+      type: "string"
+      description: "Which vcloud to connect to"
+      required: false
+      position: 0
+

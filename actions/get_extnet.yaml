@@ -1,0 +1,13 @@
+---
+  name: "get_extnet"
+  runner_type: "python-script"
+  description: "Retrieve external networks"
+  enabled: true
+  entry_point: "get_extnet.py"
+  parameters:
+    vcloud:
+      type: "string"
+      description: "Which vcloud to connect to"
+      required: false
+      position: 0
+
