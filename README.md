@@ -44,10 +44,14 @@ Sample Imput:
 			"PVDC": "PVDC-One",
 			"ComputeCapacity":{
 				"Cpu":{
-					"Units":"GHz"
+					"Units": "MHz",
+					"Allocatedpercent": 50,
+					"Limit": 10
 					},
 				"Memory":{
-					"Units":"MB"
+					"Units": "MB"
+					"Allocatedpercent": 50,
+					"Limit": 100
 					}
 				}
 			}
@@ -63,6 +67,8 @@ Sample Imput:
 	}
 }
 ```
+
+The input to the action is pared with the defaults that can be set in the config file. So not all of these options are required on the input.
 
 * 'vcd.create_ext_network' - Create an External Network from VSphere portgroups 
 Sample input:
