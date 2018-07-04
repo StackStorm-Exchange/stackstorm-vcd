@@ -191,25 +191,30 @@ class VCDBaseActions(Action):
 
         return pvdc_data
 
-    def get_pvdcs(self):
+    def get_pvdcs(self, detailed=True):
         endpoint = 'admin/extension/providerVdcReferences'
         self.pvdcs = {}
         jdata = self.vcd_get(endpoint)
         jpvdcs = {}
+        data = []
         if isinstance(jdata['vmext:VMWProviderVdcReferences'][
                             'vmext:ProviderVdcReference'], list):
-            for pvdc in jdata['vmext:VMWProviderVdcReferences'][
-                    'vmext:ProviderVdcReference']:
-                jpvdcs[pvdc['@name']] = self.get_pvdc_details(
-                    pvdc['@href'].split('providervdc/', 1)[-1])
-            self.pvdcs = jpvdcs
+            data = jdata['vmext:VMWProviderVdcReferences'][
+                         'vmext:ProviderVdcReference']
         else:
-            name = jdata['vmext:VMWProviderVdcReferences'][
-                    'vmext:ProviderVdcReference']['@name']
-            ref = jdata['vmext:VMWProviderVdcReferences'][
-                    'vmext:ProviderVdcReference']['@href'].split(
-                    'providervdc/', 1)[-1]
-            self.pvdcs[name] = self.get_pvdc_details(ref)
+            data.append(jdata['vmext:VMWProviderVdcReferences'][
+                              'vmext:ProviderVdcReference'])
+
+        for item in data:
+            pid = item['@href'].split('providervdc/', 1)[-1]
+            jpvdcs[item['@name']] = {}
+            if detailed:
+                jpvdcs[item['@name']] = self.get_pvdc_details(pid)
+            else:
+                jpvdcs[item['@name']]['id'] = pid
+                jpvdcs[item['@name']]['href'] = item['@href']
+
+        self.pvdcs = jpvdcs
 
         return self.pvdcs
 
@@ -291,39 +296,80 @@ class VCDBaseActions(Action):
         jdata = self.vcd_get(endpoint)
         vdc['name'] = jdata['AdminVdc']['@name']
         vdc['href'] = jdata['AdminVdc']['@href']
+        vdc['isenabled'] = jdata['AdminVdc']['IsEnabled']
         vdc['id'] = jdata['AdminVdc']['@href'].split('vdc/', 1)[-1]
-        vdc['AllocationModel'] = jdata['AdminVdc']['AllocationModel']
-        vdc['VmQuota'] = jdata['AdminVdc']['VmQuota']
+        vdc['allocationmodel'] = jdata['AdminVdc']['AllocationModel']
+        vdc['vmquota'] = jdata['AdminVdc']['VmQuota']
 
         vdc['vapps'] = {}
         vdc['media'] = {}
         vdc['templates'] = {}
 
-        try:
-            if isinstance(jdata['AdminVdc']['ResourceEntities'][
-                    'ResourceEntity'], list):
-                vdcres = jdata['AdminVdc']['ResourceEntities'][
-                               'ResourceEntity']
-            else:
-                vdcres = []
-                vdcres.append(jdata['AdminVdc']['ResourceEntities'][
-                    'ResourceEntity'])
-            for item in vdcres:
-                if "api/media/" in item['@href']:
-                    vdc['media'][item['@name']] = {}
-                    vdc['media'][item['@name']]['id'] = item[
-                        '@href'].split('media/', 1)[-1]
-                    vdc['media'][item['@name']]['href'] = item['@href']
-                elif "api/vApp/" in item['@href']:
-                    vdc['vapps'][item['@name']] = self.get_vapp(
-                        item['@href'].split('vapp-', 1)[-1])
-                elif "api/vAppTemplate/" in item['@href']:
-                    vdc['templates'][item['@name']] = {}
-                    vdc['templates'][item['@name']]['id'] = item[
-                        '@href'].split('vappTemplate-', 1)[-1]
-                    vdc['templates'][item['@name']]['href'] = item['@href']
-        except Exception:
-            pass
+        vdcres = []
+        if jdata['AdminVdc']['ResourceEntities'] is None:
+            return vdc
+
+        vdcres = []
+        if isinstance(jdata['AdminVdc']['ResourceEntities'][
+                'ResourceEntity'], list):
+            vdcres = jdata['AdminVdc']['ResourceEntities'][
+                           'ResourceEntity']
+        else:
+            vdcres.append(jdata['AdminVdc']['ResourceEntities'][
+                'ResourceEntity'])
+        for item in vdcres:
+            if "api/media/" in item['@href']:
+                vdc['media'][item['@name']] = {}
+                vdc['media'][item['@name']]['id'] = item[
+                    '@href'].split('media/', 1)[-1]
+                vdc['media'][item['@name']]['href'] = item['@href']
+            elif "api/vApp/" in item['@href']:
+                vdc['vapps'][item['@name']] = self.get_vapp(
+                    item['@href'].split('vapp-', 1)[-1])
+            elif "api/vAppTemplate/" in item['@href']:
+                vdc['templates'][item['@name']] = {}
+                vdc['templates'][item['@name']]['id'] = item[
+                    '@href'].split('vappTemplate-', 1)[-1]
+                vdc['templates'][item['@name']]['href'] = item['@href']
+
+        vdc['computecapacity'] = {}
+        for ctype in ['Cpu', 'Memory']:
+            vdc['computecapacity'][ctype] = {}
+            for citem in ['Units', 'Allocated', 'Limit',
+                          'Reserved', 'Used', 'OverHead']:
+                if citem in jdata['AdminVdc']['ComputeCapacity'][ctype].keys():
+                    vdc['computecapacity'][ctype][citem] = jdata['AdminVdc'][
+                        'ComputeCapacity'][ctype][citem]
+
+        vdc['storageprofiles'] = {}
+        storageprofiles = []
+        if isinstance(jdata['AdminVdc']['VdcStorageProfiles'][
+                            'VdcStorageProfile'], list):
+            storageprofiles = jdata['AdminVdc']['VdcStorageProfiles'][
+                                    'VdcStorageProfile']
+        else:
+            storageprofiles.append(jdata['AdminVdc']['VdcStorageProfiles'][
+                                         'VdcStorageProfile'])
+        for item in storageprofiles:
+            vdc['storageprofiles'][item['@name']] = {}
+            vdc['storageprofiles'][item['@name']]['href'] = item['@href']
+
+        vdc['availablenetworks'] = {}
+        networklist = []
+        if "AvailableNetworks" in jdata['AdminVdc'].keys():
+            if jdata['AdminVdc']['AvailableNetworks'] is not None:
+                if isinstance(jdata['AdminVdc']['AvailableNetworks'][
+                        'Network'], list):
+                    networklist = jdata['AdminVdc']['AvailableNetworks'][
+                                        'Network']
+                else:
+                    networklist.append(jdata['AdminVdc'][
+                        'AvailableNetworks']['Network'])
+
+                for item in networklist:
+                    vdc['availablenetworks'][item['@name']] = {}
+                    vdc['availablenetworks'][item['@name']][
+                        'href'] = item['@href']
 
         return vdc
 
@@ -333,7 +379,6 @@ class VCDBaseActions(Action):
         jdata = self.vcd_get(endpoint)
 
         vapp['name'] = jdata['VApp']['@name']
-        vapp['description'] = jdata['VApp']['Description']
         vapp['href'] = jdata['VApp']['@href']
         vapp['id'] = jdata['VApp']['@id']
 
@@ -344,10 +389,16 @@ class VCDBaseActions(Action):
                    'rasd:VirtualQuantity',
                    'rasd:VirtualQuantityUnits',
                    'rasd:ResourceType']
-        if isinstance(jdata['VApp']['Children']['Vm'], list):
-            vms = jdata['VApp']['Children']['Vm']
+
+        if "Children" in jdata['VApp'].keys():
+            if "Vm" in jdata['VApp']['Children'].keys():
+                if isinstance(jdata['VApp']['Children']['Vm'], list):
+                    vms = jdata['VApp']['Children']['Vm']
+                else:
+                    vms.append(jdata['VApp']['Children']['Vm'])
         else:
-            vms.append(jdata['VApp']['Children']['Vm'])
+            vms = []
+
         for item in vms:
             vapp['vms'][item['@name']] = {}
             vapp['vms'][item['@name']]['id'] = item['@id'].split(
