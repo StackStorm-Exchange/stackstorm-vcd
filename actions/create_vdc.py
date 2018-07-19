@@ -14,16 +14,16 @@
 # limitations under the License.
 
 from lib.vcd import VCDBaseActions
-from xml.etree.ElementTree import Element, SubElement, tostring
+from xml.etree.ElementTree import Element, SubElement
 import copy
 
 
 class createVDC(VCDBaseActions):
     def run(self, vcloud="default", data=None):
+        contenttype = "application/vnd.vmware.admin.createVdcParams+xml; "\
+                      "charset=ISO-8859-1"
         self.set_connection(vcloud)
         self.get_sessionid()
-        compute = ['Cpu',
-                   'Memory']
         computeorder = ['Units',
                         'Allocated',
                         'Limit',
@@ -31,12 +31,10 @@ class createVDC(VCDBaseActions):
                         'Users',
                         'Overhead']
 
-        cpu_order = []
-        mem_order = []
         post = {}
         endpoint = 'admin/orgs'
         all_orgs = self.get_orgs()
-        all_pvdcs = self.get_pvdcs()
+        all_pvdcs = self.get_pvdcs("false")
         for org in data:
             for vdc in data[org]['vdcs']:
                 if org not in all_orgs.keys():
@@ -51,6 +49,12 @@ class createVDC(VCDBaseActions):
                 description = SubElement(createvdcparams, 'Description')
                 description.text = data[org]['vdcs'][vdc]['Description']
                 createvdcparams.extend(description)
+
+                allocationmodel = SubElement(createvdcparams,
+                                             'AllocationModel')
+                allocationmodel.text = data[org]['vdcs'][vdc][
+                                            'AllocationModel']
+                createvdcparams.extend(allocationmodel)
 
                 computecapacity = SubElement(createvdcparams,
                                              'ComputeCapacity')
@@ -70,12 +74,6 @@ class createVDC(VCDBaseActions):
                                                           "ReservationPool"):
                     post["%s-%s" % (org, vdc)] = "Invalid Allocation Model"
                     continue
-                else:
-                    if vdcsettings['AllocationModel'] == "ReservationPool":
-                        vdcsettings['ComputeCapacity']['Cpu'][
-                                    'Allocatedpercent'] = 100
-                        vdcsettings['ComputeCapacity']['Memory'][
-                                    'Allocatedpercent'] = 100
 
                 # ComputeCapacity
                 if "ComputeCapacity" in vdcsettings.keys():
@@ -83,19 +81,15 @@ class createVDC(VCDBaseActions):
                                            'Cpu']['Limit']
                     cpupercent = vdcsettings['ComputeCapacity'][
                                              'Cpu']['Allocatedpercent']
-                    cpuallocated = int(round(float(
-                                       cpulimit) / 100 * cpupercent))
                     vdcsettings['ComputeCapacity']['Cpu'][
-                                'Allocated'] = cpuallocated
+                                'Allocated'] = cpulimit
 
                     memlimit = vdcsettings['ComputeCapacity'][
                                            'Memory']['Limit']
                     mempercent = vdcsettings['ComputeCapacity'][
                                              'Memory']['Allocatedpercent']
-                    memallocated = int(round(float(
-                                       memlimit) / 100 * mempercent))
                     vdcsettings['ComputeCapacity']['Memory'][
-                                'Allocated'] = memallocated
+                                'Allocated'] = memlimit
 
                 del vdcsettings['ComputeCapacity']['Cpu'][
                                 'Allocatedpercent']
@@ -118,14 +112,57 @@ class createVDC(VCDBaseActions):
                                                        'Memory'][item]}
                             self.convertjson(memorycapacity, jdata)
 
-                # post['org-' + org] = self.vcd_post(endpoint, createvdcparams)
-
                 if vdcsettings['NetworkQuota']:
                     networkquota = SubElement(createvdcparams, 'NetworkQuota')
                     networkquota.text = str(vdcsettings['NetworkQuota'])
                     createvdcparams.extend(networkquota)
 
                 # Storage Profile code here
+                pvdc_id = all_pvdcs[vdcsettings['PVDC']]['id']
+                pvdc_details = self.get_pvdc_details(pvdc_id)
+                if vdcsettings['Storage']['storage_profile'] not in\
+                        pvdc_details['storage_profiles'].keys():
+                    post["%s-%s" % (org, vdc)] = "Invalid Storage Profile"
+                    continue
+
+                storageprofile = SubElement(createvdcparams,
+                                            'VdcStorageProfile')
+                createvdcparams.extend(storageprofile)
+
+                storage_enabled = SubElement(storageprofile, 'Enabled')
+                storage_enabled.text = "true"
+                storageprofile.extend(storage_enabled)
+
+                storage_units = SubElement(storageprofile, 'Units')
+                storage_units.text = vdcsettings['Storage']['unit']
+                storageprofile.extend(storage_units)
+
+                storage_limit = SubElement(storageprofile, 'Limit')
+                storage_limit.text = str(vdcsettings['Storage']['limit'])
+                storageprofile.extend(storage_limit)
+
+                storage_default = SubElement(storageprofile, 'Default')
+                storage_default.text = "true"
+                storageprofile.extend(storage_default)
+
+                storage_ref = SubElement(storageprofile,
+                                         'ProviderVdcStorageProfile')
+                storage_ref.set("href", pvdc_details['storage_profiles'][
+                    vdcsettings['Storage']['storage_profile']]['href'])
+                storageprofile.extend(storage_ref)
+
+                # Add percents for Allocation Pool
+                if vdcsettings['AllocationModel'] == 'AllocationPool':
+                    guaranteedmemory = SubElement(createvdcparams,
+                                                  'ResourceGuaranteedMemory')
+                    guaranteedmemory.text = str(round(float(mempercent),
+                                                      2)/100)
+                    createvdcparams.extend(guaranteedmemory)
+
+                    guaranteedcpu = SubElement(createvdcparams,
+                                               'ResourceGuaranteedCpu')
+                    guaranteedcpu.text = str(round(float(cpupercent), 2)/100)
+                    createvdcparams.extend(guaranteedcpu)
 
                 # set IS Thin Provision option
                 if "IsThinProvision" in vdcsettings.keys():
@@ -161,7 +198,8 @@ class createVDC(VCDBaseActions):
                     fastprovision.text = "false"
                     createvdcparams.extend(fastprovision)
 
-                post[org + '-' + vdc] = "Will create VDC"
+                post['org-' + org] = self.vcd_post(endpoint,
+                                                   createvdcparams,
+                                                   contenttype)
 
-                print tostring(createvdcparams)
         return post
