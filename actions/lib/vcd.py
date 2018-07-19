@@ -254,16 +254,19 @@ class VCDBaseActions(Action):
         for item in jdata['OrgList']['Org']:
             orgs[item['@name']] = {}
             orgs[item['@name']]['id'] = item['@href'].split('org/', 1)[-1]
+            orgs[item['@name']]['href'] = item['@href']
         return orgs
 
     def get_org(self, org_ref=None):
         org = {}
         org['vdcs'] = {}
         org['users'] = {}
+        org['catalogs'] = {}
         endpoint = "admin/org/%s" % org_ref
         jdata = self.vcd_get(endpoint)
         org['desc'] = jdata['AdminOrg']['Description']
         org['fullname'] = jdata['AdminOrg']['FullName']
+        org['name'] = jdata['AdminOrg']['@name']
         org['id'] = jdata['AdminOrg']['@id'].split('org:', 1)[-1]
 
         if jdata['AdminOrg']['Vdcs']:
@@ -288,7 +291,43 @@ class VCDBaseActions(Action):
                     org['users'][name] = {}
                     org['users'][name]['id'] = nameid
 
+        if jdata['AdminOrg']['Catalogs'] is not None:
+            catalogs = []
+            if isinstance(jdata['AdminOrg']['Catalogs'][
+                                'CatalogReference'], list):
+                catalogs = jdata['AdminOrg']['Catalogs']['CatalogReference']
+            else:
+                catalogs.append(jdata['AdminOrg']['Catalogs'][
+                                      'CatalogReference'])
+            for item in catalogs:
+                org['catalogs'][item['@name']] = self.get_catalog(item[
+                    '@href'].split('catalog/', 1)[-1])
+
         return org
+
+    def get_catalog(self, catalogid):
+        catalog = {}
+        catalog['templates'] = {}
+        citems = []
+        endpoint = "admin/catalog/%s" % catalogid
+        jdata = self.vcd_get(endpoint)
+        catalog['id'] = jdata['AdminCatalog']['@id'].split('catalog:', 1)[-1]
+        catalog['href'] = jdata['AdminCatalog']['@href']
+        catalog['ispublished'] = jdata['AdminCatalog']['IsPublished']
+        if jdata['AdminCatalog']['CatalogItems'] is None:
+            return catalog
+        if isinstance(jdata['AdminCatalog']['CatalogItems'][
+                            'CatalogItem'], list):
+            citems = jdata['AdminCatalog']['CatalogItems']['CatalogItem']
+        else:
+            citems.append(jdata['AdminCatalog']['CatalogItems']['CatalogItem'])
+
+        for item in citems:
+            catalog['templates'][item['@name']] = {}
+            catalog['templates'][item['@name']]['href'] = item['@href']
+            catalog['templates'][item['@name']]['id'] = item['@id']
+
+        return catalog
 
     def get_vdc(self, vdc_ref=None):
         vdc = {}
