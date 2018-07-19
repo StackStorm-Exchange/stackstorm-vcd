@@ -17,7 +17,7 @@ from lib.vcd import VCDBaseActions
 
 
 class getVSNetworks(VCDBaseActions):
-    def run(self, vcloud="default", vsid):
+    def run(self, vsid, vcloud="default"):
         self.set_connection(vcloud)
         self.get_sessionid()
         return self.get_vsnetworks(vsid)
