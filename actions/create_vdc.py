@@ -53,7 +53,7 @@ class createVDC(VCDBaseActions):
                 allocationmodel = SubElement(createvdcparams,
                                              'AllocationModel')
                 allocationmodel.text = data[org]['vdcs'][vdc][
-                                            'AllocationModel']
+                    'AllocationModel']
                 createvdcparams.extend(allocationmodel)
 
                 computecapacity = SubElement(createvdcparams,
@@ -68,7 +68,7 @@ class createVDC(VCDBaseActions):
 
                 vdcsettings = copy.deepcopy(self.config['defaults']['vdc'])
                 vdcsettings = self.merge_dict(vdcsettings, data[org][
-                                                                'vdcs'][vdc])
+                    'vdcs'][vdc])
 
                 if vdcsettings['AllocationModel'] not in ("AllocationPool",
                                                           "ReservationPool"):
@@ -78,38 +78,38 @@ class createVDC(VCDBaseActions):
                 # ComputeCapacity
                 if "ComputeCapacity" in vdcsettings.keys():
                     cpulimit = vdcsettings['ComputeCapacity'][
-                                           'Cpu']['Limit']
+                        'Cpu']['Limit']
                     cpupercent = vdcsettings['ComputeCapacity'][
-                                             'Cpu']['Allocatedpercent']
+                        'Cpu']['Allocatedpercent']
                     vdcsettings['ComputeCapacity']['Cpu'][
-                                'Allocated'] = cpulimit
+                        'Allocated'] = cpulimit
 
                     memlimit = vdcsettings['ComputeCapacity'][
-                                           'Memory']['Limit']
+                        'Memory']['Limit']
                     mempercent = vdcsettings['ComputeCapacity'][
-                                             'Memory']['Allocatedpercent']
+                        'Memory']['Allocatedpercent']
                     vdcsettings['ComputeCapacity']['Memory'][
-                                'Allocated'] = memlimit
+                        'Allocated'] = memlimit
 
                 del vdcsettings['ComputeCapacity']['Cpu'][
-                                'Allocatedpercent']
+                    'Allocatedpercent']
                 del vdcsettings['ComputeCapacity']['Memory'][
-                                'Allocatedpercent']
+                    'Allocatedpercent']
 
                 if vdcsettings['ComputeCapacity']['Cpu']:
                     for item in computeorder:
                         if item in vdcsettings['ComputeCapacity'][
-                                               'Cpu'].keys():
+                                'Cpu'].keys():
                             jdata = {item: vdcsettings['ComputeCapacity'][
-                                                       'Cpu'][item]}
+                                'Cpu'][item]}
                             self.convertjson(cpucapacity, jdata)
 
                 if vdcsettings['ComputeCapacity']['Memory']:
                     for item in computeorder:
                         if item in vdcsettings['ComputeCapacity'][
-                                               'Memory'].keys():
+                                'Memory'].keys():
                             jdata = {item: vdcsettings['ComputeCapacity'][
-                                                       'Memory'][item]}
+                                'Memory'][item]}
                             self.convertjson(memorycapacity, jdata)
 
                 if vdcsettings['NetworkQuota']:
@@ -156,12 +156,12 @@ class createVDC(VCDBaseActions):
                     guaranteedmemory = SubElement(createvdcparams,
                                                   'ResourceGuaranteedMemory')
                     guaranteedmemory.text = str(round(float(mempercent),
-                                                      2)/100)
+                                                      2) / 100)
                     createvdcparams.extend(guaranteedmemory)
 
                     guaranteedcpu = SubElement(createvdcparams,
                                                'ResourceGuaranteedCpu')
-                    guaranteedcpu.text = str(round(float(cpupercent), 2)/100)
+                    guaranteedcpu.text = str(round(float(cpupercent), 2) / 100)
                     createvdcparams.extend(guaranteedcpu)
 
                 # set IS Thin Provision option
