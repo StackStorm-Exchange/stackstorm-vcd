@@ -49,7 +49,7 @@ class createEXTNetwork(VCDBaseActions):
                     if "description" in data[vsphere][network].keys():
                         description = SubElement(extnet, 'vcloud:Description')
                         description.text = data[vsphere][network][
-                                                'description']
+                            'description']
                         extnet.extend(description)
 
                     configuration = SubElement(extnet, 'vcloud:Configuration')
@@ -136,7 +136,7 @@ class createEXTNetwork(VCDBaseActions):
                         network]['moref']
 
                     vimobjecttype = SubElement(vimportgroupref,
-                        'vmext:VimObjectType')
+                                               'vmext:VimObjectType')
                     vimobjecttype.text = all_vsphere[vsphere]['vsnetworks'][
                         network]['type']
 
