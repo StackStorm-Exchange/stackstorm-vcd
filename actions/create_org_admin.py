@@ -58,7 +58,7 @@ class createORGADMIN(VCDBaseActions):
 
                     password = SubElement(orgadmin, 'Password')
                     password.text = str(data[org]['org_admin'][
-                                             user]['Password'])
+                        user]['Password'])
                     orgadmin.extend(password)
 
                     groupreferences = SubElement(orgadmin, 'GroupReferences')
