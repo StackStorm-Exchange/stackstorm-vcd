@@ -317,7 +317,7 @@ class VCDBaseActions(Action):
         if jdata['AdminCatalog']['CatalogItems'] is None:
             return catalog
         if isinstance(jdata['AdminCatalog']['CatalogItems'][
-                            'CatalogItem'], list):
+                'CatalogItem'], list):
             citems = jdata['AdminCatalog']['CatalogItems']['CatalogItem']
         else:
             citems.append(jdata['AdminCatalog']['CatalogItems']['CatalogItem'])
