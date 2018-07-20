@@ -74,7 +74,7 @@ class createORG(VCDBaseActions):
 
             if "org" in self.config['defaults'].keys():
                 settings = copy.deepcopy(self.config['defaults']['org'][
-                                                     'Settings'])
+                    'Settings'])
 
             if "Settings" in data[org].keys():
                 settings = self.merge_dict(settings, data[org]['Settings'])
@@ -102,7 +102,7 @@ class createORG(VCDBaseActions):
                 for item in VAppTemplateLeaseSettings:
                     if item in settings['VAppTemplateLeaseSettings'].keys():
                         jdata = {item: settings['VAppTemplateLeaseSettings'][
-                                                item]}
+                            item]}
                         self.convertjson(orgvapptemplatelease, jdata)
 
             if "OrgPasswordPolicySettings" in settings.keys():
@@ -112,7 +112,7 @@ class createORG(VCDBaseActions):
                 for item in OrgPasswordPolicySettings:
                     if item in settings['OrgPasswordPolicySettings'].keys():
                         jdata = {item: settings['OrgPasswordPolicySettings'][
-                                                item]}
+                            item]}
                         self.convertjson(orgpasswordpolicy, jdata)
 
             if "OrgOperationLimitsSettings" in settings.keys():
@@ -122,7 +122,7 @@ class createORG(VCDBaseActions):
                 for item in OrgOperationLimitsSettings:
                     if item in settings['OrgOperationLimitsSettings'].keys():
                         jdata = {item: settings['OrgOperationLimitsSettings'][
-                                                item]}
+                            item]}
                         self.convertjson(orgoperationlimits, jdata)
 
             if org not in all_orgs.keys():
