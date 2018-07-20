@@ -133,12 +133,12 @@ class createEXTNetwork(VCDBaseActions):
 
                     moref = SubElement(vimportgroupref, 'vmext:MoRef')
                     moref.text = all_vsphere[vsphere]['vsnetworks'][
-                                             network]['moref']
+                        network]['moref']
 
                     vimobjecttype = SubElement(vimportgroupref,
-                                               'vmext:VimObjectType')
+                        'vmext:VimObjectType')
                     vimobjecttype.text = all_vsphere[vsphere]['vsnetworks'][
-                                                     network]['type']
+                        network]['type']
 
                     post[vsphere + ' - ' + network] = self.vcd_post(endpoint,
                                                                     extnet,
