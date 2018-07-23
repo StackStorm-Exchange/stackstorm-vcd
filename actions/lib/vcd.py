@@ -339,6 +339,8 @@ class VCDBaseActions(Action):
         vdc['id'] = jdata['AdminVdc']['@href'].split('vdc/', 1)[-1]
         vdc['allocationmodel'] = jdata['AdminVdc']['AllocationModel']
         vdc['vmquota'] = jdata['AdminVdc']['VmQuota']
+        vdc['guaranteedcpupercentage'] = float(jdata['AdminVdc']['ResourceGuaranteedCpu']) * 100
+        vdc['guaranteedmemorypercentage'] = float(jdata['AdminVdc']['ResourceGuaranteedMemory']) * 100
 
         vdc['vapps'] = {}
         vdc['media'] = {}
