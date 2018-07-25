@@ -339,39 +339,39 @@ class VCDBaseActions(Action):
         vdc['id'] = jdata['AdminVdc']['@href'].split('vdc/', 1)[-1]
         vdc['allocationmodel'] = jdata['AdminVdc']['AllocationModel']
         vdc['vmquota'] = jdata['AdminVdc']['VmQuota']
-        vdc['guaranteedcpupercentage'] = float(jdata['AdminVdc']['ResourceGuaranteedCpu']) * 100
-        vdc['guaranteedmemorypercentage'] = float(jdata['AdminVdc']['ResourceGuaranteedMemory']) * 100
+        vdc['guaranteedcpupercentage'] =\
+            float(jdata['AdminVdc']['ResourceGuaranteedCpu']) * 100
+        vdc['guaranteedmemorypercentage'] =\
+            float(jdata['AdminVdc']['ResourceGuaranteedMemory']) * 100
 
         vdc['vapps'] = {}
         vdc['media'] = {}
         vdc['templates'] = {}
 
         vdcres = []
-        if jdata['AdminVdc']['ResourceEntities'] is None:
-            return vdc
-
-        vdcres = []
-        if isinstance(jdata['AdminVdc']['ResourceEntities'][
-                'ResourceEntity'], list):
-            vdcres = jdata['AdminVdc']['ResourceEntities'][
-                'ResourceEntity']
-        else:
-            vdcres.append(jdata['AdminVdc']['ResourceEntities'][
-                'ResourceEntity'])
-        for item in vdcres:
-            if "api/media/" in item['@href']:
-                vdc['media'][item['@name']] = {}
-                vdc['media'][item['@name']]['id'] = item[
-                    '@href'].split('media/', 1)[-1]
-                vdc['media'][item['@name']]['href'] = item['@href']
-            elif "api/vApp/" in item['@href']:
-                vdc['vapps'][item['@name']] = self.get_vapp(
-                    item['@href'].split('vapp-', 1)[-1])
-            elif "api/vAppTemplate/" in item['@href']:
-                vdc['templates'][item['@name']] = {}
-                vdc['templates'][item['@name']]['id'] = item[
-                    '@href'].split('vappTemplate-', 1)[-1]
-                vdc['templates'][item['@name']]['href'] = item['@href']
+        if jdata['AdminVdc']['ResourceEntities'] is not None:
+            vdcres = []
+            if isinstance(jdata['AdminVdc']['ResourceEntities'][
+                    'ResourceEntity'], list):
+                vdcres = jdata['AdminVdc']['ResourceEntities'][
+                    'ResourceEntity']
+            else:
+                vdcres.append(jdata['AdminVdc']['ResourceEntities'][
+                    'ResourceEntity'])
+            for item in vdcres:
+                if "api/media/" in item['@href']:
+                    vdc['media'][item['@name']] = {}
+                    vdc['media'][item['@name']]['id'] = item[
+                        '@href'].split('media/', 1)[-1]
+                    vdc['media'][item['@name']]['href'] = item['@href']
+                elif "api/vApp/" in item['@href']:
+                    vdc['vapps'][item['@name']] = self.get_vapp(
+                        item['@href'].split('vapp-', 1)[-1])
+                elif "api/vAppTemplate/" in item['@href']:
+                    vdc['templates'][item['@name']] = {}
+                    vdc['templates'][item['@name']]['id'] = item[
+                        '@href'].split('vappTemplate-', 1)[-1]
+                    vdc['templates'][item['@name']]['href'] = item['@href']
 
         vdc['computecapacity'] = {}
         for ctype in ['Cpu', 'Memory']:
