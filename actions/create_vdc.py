@@ -38,9 +38,16 @@ class createVDC(VCDBaseActions):
         for org in data:
             for vdc in data[org]['vdcs']:
                 if org not in all_orgs.keys():
-                    post["%s-%s" % (org, vdc)] = "Org Does not exist"
+                    post["%s" % (org.lower())] = "Org Does not exist"
                     continue
                 endpoint = "admin/org/%s/vdcsparams" % all_orgs[org]['id']
+                org_details = self.get_org(all_orgs[org]['id'])
+
+                if vdc in org_details['vdcs'].keys():
+                    post["%s (%s)" % (vdc.lower(), org.lower())] =\
+                        "VDC already exists"
+                    continue
+
                 createvdcparams = Element('CreateVdcParams')
                 createvdcparams.set('xmlns', 'http://www.vmware.'
                                              'com/vcloud/v1.5')
@@ -72,7 +79,8 @@ class createVDC(VCDBaseActions):
 
                 if vdcsettings['AllocationModel'] not in ("AllocationPool",
                                                           "ReservationPool"):
-                    post["%s-%s" % (org, vdc)] = "Invalid Allocation Model"
+                    post["%s (%s)" % (vdc.lower(), org.lower())] =\
+                        "Invalid Allocation Model"
                     continue
 
                 # ComputeCapacity
@@ -122,7 +130,8 @@ class createVDC(VCDBaseActions):
                 pvdc_details = self.get_pvdc_details(pvdc_id)
                 if vdcsettings['Storage']['storage_profile'] not in\
                         pvdc_details['storage_profiles'].keys():
-                    post["%s-%s" % (org, vdc)] = "Invalid Storage Profile"
+                    post["%s (%s)" % (vdc.lower(), org.lower())] =\
+                        "Invalid Storage Profile"
                     continue
 
                 storageprofile = SubElement(createvdcparams,
@@ -198,8 +207,9 @@ class createVDC(VCDBaseActions):
                     fastprovision.text = "false"
                     createvdcparams.extend(fastprovision)
 
-                post['org-' + org] = self.vcd_post(endpoint,
-                                                   createvdcparams,
-                                                   contenttype)
+                post['%s (%s)' % (vdc.lower(), org.lower())] = self.vcd_post(
+                    endpoint,
+                    createvdcparams,
+                    contenttype)
 
         return post

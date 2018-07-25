@@ -64,13 +64,15 @@ class createORGADMIN(VCDBaseActions):
                     groupreferences = SubElement(orgadmin, 'GroupReferences')
                     orgadmin.extend(groupreferences)
 
-                    if user in org_details['users'].keys():
-                        post[org + ' - ' + user] = "User exists"
+                    if user.lower() in org_details['users'].keys():
+                        post['%s (%s)' % (user.lower(), org.lower())] =\
+                            "User exists"
                     else:
-                        post[org + ' - ' + user] = self.vcd_post(endpoint,
-                                                                 orgadmin,
-                                                                 contenttype)
+                        post['%s (%s)' % (user.lower(), org.lower())] =\
+                            self.vcd_post(endpoint,
+                                          orgadmin,
+                                          contenttype)
                 else:
-                    post['%s-%s' % (org, user)] = "Org does not exist"
+                    post['%s' % (org.lower())] = "Org does not exist"
 
         return post

@@ -126,9 +126,10 @@ class createORG(VCDBaseActions):
                         self.convertjson(orgoperationlimits, jdata)
 
             if org not in all_orgs.keys():
-                post['org-' + org] = self.vcd_post(endpoint, adminorg,
-                                                   contenttype)
+                post[org] = self.vcd_post(endpoint,
+                                          adminorg,
+                                          contenttype)
             else:
-                post['org-' + org] = "Org Already Exists"
+                post[org] = "Org Already Exists"
 
         return post
