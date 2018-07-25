@@ -29,6 +29,7 @@ Run `sudo st2ctl reload --register-configs` to get StackStorm to load the update
 * 'vcd.create_org' - Create an Organisation  
 * 'vcd.create_org_admin' - Create an Organisation Admin Account 
 * 'vcd.create_vdc' - Create an VDC  
+* 'vcd.create_vdc_network' - Create an VDC network. currently only bridge type is supported.
 These actions are designed to work from the same input structure. it will use/ignore elements based on the actions function.
 
 Sample Imput:
@@ -42,6 +43,12 @@ Sample Imput:
 			"Description": "Test VDC 1",
 			"AllocationModel": "ReservationPool",
 			"PVDC": "PVDC-One",
+                        "org_network": {
+                            "net_name": {
+                                "type": "bridged",
+                                "parent": "external network name"
+                            }
+                        },
 			"ComputeCapacity":{
 				"Cpu":{
 					"Units": "MHz",
