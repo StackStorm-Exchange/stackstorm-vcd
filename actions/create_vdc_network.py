@@ -73,7 +73,7 @@ class createVDCNetwork(VCDBaseActions):
                             continue
 
                         networkref = pvdc_details['external_networks'][
-                                                  parent]['href']
+                            parent]['href']
                         networkref = networkref.replace(
                             "extension/externalnet", "network")
 
