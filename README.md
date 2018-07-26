@@ -35,43 +35,48 @@ These actions are designed to work from the same input structure. it will use/ig
 Sample Imput:
 ```
 {"TEST":{
-	"Description":"Something to explain here",
-	"FullName":"Test Inc",
-	"vdcs":{
-		"test1":{
-			"Storage_Profile": "storage-premium",
-			"Description": "Test VDC 1",
-			"AllocationModel": "ReservationPool",
-			"PVDC": "PVDC-One",
-                        "org_network": {
-                            "net_name": {
-                                "type": "bridged",
-                                "parent": "external network name"
-                            }
-                        },
-			"ComputeCapacity":{
-				"Cpu":{
-					"Units": "MHz",
-					"Allocatedpercent": 50,
-					"Limit": 10
-					},
-				"Memory":{
-					"Units": "MB"
-					"Allocatedpercent": 50,
-					"Limit": 100
-					}
-				}
-			}
-		},
-	"IsEnabled":true,
-	"org_admin":{
-		"admin1":{
-			"FullName": "Admin account 1",
-			"Password": "Password1",
-			"IsEnabled": true
-			}
-		}
-	}
+  "Description":"Something to explain here",
+  "FullName":"Test Inc",
+  "vdcs":{
+    "test1":{
+      "Storage_Profile": "storage-premium",
+      "Description": "Test VDC 1",
+      "AllocationModel": "ReservationPool",
+      "PVDC": "PVDC-One",
+      "org_network": {
+        "net_name": {
+          "type": "bridged",
+          "parent": "external network name"
+        }
+      },
+      "Storage": {
+        "storage_profile": "storageprofilename",
+        "limit": 10000,
+        "unit": "MB"
+      },
+      "ComputeCapacity":{
+        "Cpu":{
+          "Units": "MHz",
+          "Allocatedpercent": 50,
+          "Limit": 10
+        },
+        "Memory":{
+          "Units": "MB"
+          "Allocatedpercent": 50,
+          "Limit": 100
+        }
+        }
+      }
+    },
+  "IsEnabled":true,
+  "org_admin":{
+    "admin1":{
+      "FullName": "Admin account 1",
+      "Password": "Password1",
+      "IsEnabled": true
+      }
+    }
+  }
 }
 ```
 
@@ -81,17 +86,17 @@ The input to the action is pared with the defaults that can be set in the config
 Sample input:
 ```
 {"vsphere1":{
-	"vsphere-network1":{
-		"name": "new-vsphere-network",
-		"description":"test network",
-		"dns2":"2.2.2.2",
-		"dns1":"1.1.1.1",
-		"netmask":"255.255.255.0",
-		"ip_pools":["192.168.0.2-192.168.0.5"],
-		"dnssuffix":"something.com",
-		"gateway":"192.168.0.1"
-		}
-	}
+  "vsphere-network1":{
+    "name": "new-vsphere-network",
+    "description":"test network",
+    "dns2":"2.2.2.2",
+    "dns1":"1.1.1.1",
+    "netmask":"255.255.255.0",
+    "ip_pools":["192.168.0.2-192.168.0.5"],
+    "dnssuffix":"something.com",
+    "gateway":"192.168.0.1"
+    }
+  }
 }
 ```
 Name and description are optional fields. If no Name is provided it will generate name using the "vsphere network name" + "the "vsphere name"
