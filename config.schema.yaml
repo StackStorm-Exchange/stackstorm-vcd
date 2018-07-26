@@ -111,6 +111,18 @@ defaults:
         IsThinProvision:
           type: "boolean"
           required: false
+        Storage:
+          type: "object"
+          properties:
+            Storage_Profile:
+              type: "string"
+              required: false
+            Limit: 
+              type: "integer"
+              required: false
+            Units:
+              type: "string"
+              required: false
         ComputeCapacity:
           type: "object"
           properties:
