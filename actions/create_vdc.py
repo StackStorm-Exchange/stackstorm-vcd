@@ -128,7 +128,7 @@ class createVDC(VCDBaseActions):
                 # Storage Profile code here
                 pvdc_id = all_pvdcs[vdcsettings['PVDC']]['id']
                 pvdc_details = self.get_pvdc_details(pvdc_id)
-                if vdcsettings['Storage']['storage_profile'] not in\
+                if vdcsettings['Storage']['Storage_Profile'] not in\
                         pvdc_details['storage_profiles'].keys():
                     post["%s (%s)" % (vdc.lower(), org.lower())] =\
                         "Invalid Storage Profile"
@@ -143,11 +143,11 @@ class createVDC(VCDBaseActions):
                 storageprofile.extend(storage_enabled)
 
                 storage_units = SubElement(storageprofile, 'Units')
-                storage_units.text = vdcsettings['Storage']['unit']
+                storage_units.text = vdcsettings['Storage']['Unit']
                 storageprofile.extend(storage_units)
 
                 storage_limit = SubElement(storageprofile, 'Limit')
-                storage_limit.text = str(vdcsettings['Storage']['limit'])
+                storage_limit.text = str(vdcsettings['Storage']['Limit'])
                 storageprofile.extend(storage_limit)
 
                 storage_default = SubElement(storageprofile, 'Default')
@@ -157,7 +157,7 @@ class createVDC(VCDBaseActions):
                 storage_ref = SubElement(storageprofile,
                                          'ProviderVdcStorageProfile')
                 storage_ref.set("href", pvdc_details['storage_profiles'][
-                    vdcsettings['Storage']['storage_profile']]['href'])
+                    vdcsettings['Storage']['Storage_Profile']]['href'])
                 storageprofile.extend(storage_ref)
 
                 # Add percents for Allocation Pool
