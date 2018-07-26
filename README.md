@@ -96,3 +96,8 @@ Sample input:
 ```
 Name and description are optional fields. If no Name is provided it will generate name using the "vsphere network name" + "the "vsphere name"
 for example: "new-vsphere-network|vsphere1"
+
+## Todo
+* Expand `create_vdc_network` to include other network types, not just `bridged`.
+* Review `get_orgs` to cope with large number of orgs without timing out. 
+* Create deploy Template actions.
