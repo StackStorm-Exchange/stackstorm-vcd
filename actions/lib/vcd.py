@@ -15,7 +15,6 @@
 
 import requests
 import xmltodict
-
 import collections
 import re
 from st2actions.runners.pythonrunner import Action
