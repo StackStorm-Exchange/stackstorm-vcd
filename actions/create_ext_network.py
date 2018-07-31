@@ -145,6 +145,4 @@ class createEXTNetwork(VCDBaseActions):
                                                                     contenttype
                                                                     )
 
-                    # print tostring(extnet)
-
         return post
