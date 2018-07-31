@@ -16,8 +16,12 @@
 from lib.vcd import VCDBaseActions
 
 
-class getPVDCs(VCDBaseActions):
-    def run(self, vcloud="default", detailed=False):
+class getORGIDs(VCDBaseActions):
+    def run(self, vcloud="default"):
         self.set_connection(vcloud)
         self.get_sessionid()
-        return self.get_pvdcs(detailed)
+        orgs = self.get_orgs()
+        ids = []
+        for item in orgs:
+            ids.append(orgs[item]['id'])
+        return ids

@@ -11,13 +11,14 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
 
-from lib.vcd import VCDBaseActions
+# from mock import MagicMock
+
+from vcd_base_action_test_case import VCloudBaseActionTestCase
+
+from create_ext_network import createEXTNetwork
 
 
-class getPVDCs(VCDBaseActions):
-    def run(self, vcloud="default", detailed=False):
-        self.set_connection(vcloud)
-        self.get_sessionid()
-        return self.get_pvdcs(detailed)
+class CreateEXTNetworkActionTestCase(VCloudBaseActionTestCase):
+    __test__ = True
+    action_cls = createEXTNetwork

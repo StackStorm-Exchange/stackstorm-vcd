@@ -10,4 +10,10 @@
       description: "Which vcloud to connect to"
       required: false
       position: 0
+    detailed:
+      type: "boolean"
+      description: "Retrieve detailed PVDC list"
+      required: false
+      position: 1
+      default: false
 

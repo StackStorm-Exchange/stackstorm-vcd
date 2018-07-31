@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
 import requests
 import xmltodict
-
+import collections
+import re
 from st2actions.runners.pythonrunner import Action
+from xml.etree.ElementTree import SubElement, tostring
 
 
 class VCDBaseActions(Action):
@@ -50,9 +51,8 @@ class VCDBaseActions(Action):
     def get_sessionid(self):
         url = 'https://%s/api/sessions' % self.vcd_host
         headers = {'Accept': 'application/*+xml;version=5.1'}
-        p = requests.post(url, headers=headers,
-                          auth=(self.vcd_user + "@SYSTEM", self.vcd_pass),
-                          verify=self.vcd_ssl)
+        p = requests.post(url, headers=headers, auth=(self.vcd_user +
+                          "@SYSTEM", self.vcd_pass), verify=self.vcd_ssl)
         self.vcd_auth = p.headers['x-vcloud-authorization']
 
         return self.vcd_auth
@@ -65,6 +65,7 @@ class VCDBaseActions(Action):
         pvdc_data['compute_capacity']['memory'] = {}
         pvdc_data['network_pools'] = {}
         pvdc_data['storage_profiles'] = {}
+        pvdc_data['vcenter'] = {}
         pvdc_data['hosts'] = {}
 
         endpoint = 'admin/extension/providervdc/%s' % (pvdc_ref)
@@ -74,36 +75,78 @@ class VCDBaseActions(Action):
             'providervdc:', 1)[-1]
         pvdc_data['enabled'] = jdata['vmext:VMWProviderVdc'][
             'vcloud:IsEnabled']
+        pvdc_data['href'] = jdata['vmext:VMWProviderVdc']['@href']
 
-        for item in jdata['vmext:VMWProviderVdc']['vcloud:AvailableNetworks'][
-                'vcloud:Network']:
-            pvdc_data['external_networks'][item['@name']] = {}
-            pvdc_data['external_networks'][item['@name']]['id'] = \
-                item['@href'].split('externalnet/', 1)[-1]
+        try:
+            networks = []
+            if isinstance(jdata['vmext:VMWProviderVdc'][
+                    'vcloud:AvailableNetworks'][
+                    'vcloud:Network'], list):
+                networks = jdata['vmext:VMWProviderVdc'][
+                    'vcloud:AvailableNetworks'][
+                    'vcloud:Network']
+            else:
+                networks.append(jdata['vmext:VMWProviderVdc'][
+                    'vcloud:AvailableNetworks'][
+                    'vcloud:Network'])
+            for item in networks:
+                pvdc_data['external_networks'][item['@name']] = {}
+                pvdc_data['external_networks'][item['@name']][
+                    'href'] = item['@href']
+                pvdc_data['external_networks'][item['@name']]['id'] = \
+                    item['@href'].split('externalnet/', 1)[-1]
+        except Exception:
+            pass
 
-        for item in jdata['vmext:VMWProviderVdc']['vcloud:ComputeCapacity'][
-                'vcloud:Cpu']:
-            pvdc_data['compute_capacity']['cpu'][str(item).split(
-                'vcloud:', 1)[-1]] = jdata['vmext:VMWProviderVdc'][
-                'vcloud:ComputeCapacity']['vcloud:Cpu'][item]
+        try:
+            for item in jdata['vmext:VMWProviderVdc'][
+                    'vcloud:ComputeCapacity'][
+                    'vcloud:Cpu']:
+                pvdc_data['compute_capacity']['cpu'][str(item).split(
+                    'vcloud:', 1)[-1]] = jdata['vmext:VMWProviderVdc'][
+                    'vcloud:ComputeCapacity']['vcloud:Cpu'][item]
+        except Exception:
+            pass
 
-        for item in jdata['vmext:VMWProviderVdc']['vcloud:ComputeCapacity'][
-                'vcloud:Memory']:
-            pvdc_data['compute_capacity']['memory'][str(item).split(
-                'vcloud:', 1)[-1]] = jdata['vmext:VMWProviderVdc'][
-                'vcloud:ComputeCapacity']['vcloud:Memory'][item]
+        try:
+            for item in jdata['vmext:VMWProviderVdc'][
+                    'vcloud:ComputeCapacity'][
+                    'vcloud:Memory']:
+                pvdc_data['compute_capacity']['memory'][str(item).split(
+                    'vcloud:', 1)[-1]] = jdata['vmext:VMWProviderVdc'][
+                    'vcloud:ComputeCapacity']['vcloud:Memory'][item]
+        except Exception:
+            pass
 
-        for item in jdata['vmext:VMWProviderVdc']['vcloud:StorageProfiles'][
-                'vcloud:ProviderVdcStorageProfile']:
-            pvdc_data['storage_profiles'][item['@name']] = {}
-            pvdc_data['storage_profiles'][item['@name']]['id'] = \
-                item['@href'].split('pvdcStorageProfile/', 1)[-1]
+        try:
+            storageprofiles = []
+            if isinstance(jdata['vmext:VMWProviderVdc'][
+                    'vcloud:StorageProfiles'][
+                    'vcloud:ProviderVdcStorageProfile'], list):
+                storageprofiles = jdata['vmext:VMWProviderVdc'][
+                    'vcloud:StorageProfiles'][
+                    'vcloud:ProviderVdcStorageProfile']
+            else:
+                storageprofiles.append(jdata['vmext:VMWProviderVdc'][
+                    'vcloud:StorageProfiles'][
+                    'vcloud:ProviderVdcStorageProfile'])
+            for item in storageprofiles:
+                pvdc_data['storage_profiles'][item['@name']] = {}
+                pvdc_data['storage_profiles'][item['@name']][
+                    'href'] = item['@href']
+                pvdc_data['storage_profiles'][item['@name']]['id'] = \
+                    item['@href'].split('pvdcStorageProfile/', 1)[-1]
+        except Exception:
+            pass
 
-        for item in jdata['vmext:VMWProviderVdc']['vmext:HostReferences'][
-                'vmext:HostReference']:
-            pvdc_data['hosts'][item['@name']] = {}
-            pvdc_data['hosts'][item['@name']]['id'] = \
-                item['@href'].split('host/', 1)[-1]
+        try:
+            for item in jdata['vmext:VMWProviderVdc']['vmext:HostReferences'][
+                    'vmext:HostReference']:
+                pvdc_data['hosts'][item['@name']] = {}
+                pvdc_data['hosts'][item['@name']]['id'] = \
+                    item['@href'].split('host/', 1)[-1]
+        except Exception:
+            pass
 
         if jdata['vmext:VMWProviderVdc']['vcloud:NetworkPoolReferences']\
                 is not None:
@@ -114,6 +157,8 @@ class VCDBaseActions(Action):
                         'vcloud:NetworkPoolReferences'][
                         'vcloud:NetworkPoolReference']:
                     pvdc_data['network_pools'][item['@name']] = {}
+                    pvdc_data['network_pools'][item['@name']][
+                        'href'] = item['@href']
                     pvdc_data['network_pools'][item['@name']]['id'] = \
                         item['@href'].split('networkPool/', 1)[-1]
             else:
@@ -124,19 +169,50 @@ class VCDBaseActions(Action):
                     'vcloud:NetworkPoolReferences'][
                     'vcloud:NetworkPoolReference'][
                     '@href'].split('networkPool/', 1)[-1]
+                href = jdata['vmext:VMWProviderVdc'][
+                    'vcloud:NetworkPoolReferences'][
+                    'vcloud:NetworkPoolReference'][
+                    '@href']
                 pvdc_data['network_pools'][name] = {}
+                pvdc_data['network_pools'][name]['href'] = href
                 pvdc_data['network_pools'][name]['id'] = nid
+
+        vname = jdata['vmext:VMWProviderVdc'][
+            'vmext:VimServer']['@name']
+        vhref = jdata['vmext:VMWProviderVdc'][
+            'vmext:VimServer']['@href']
+        vid = vhref.split('vimServer/', 1)[-1]
+
+        pvdc_data['vcenter'][vname] = {}
+        pvdc_data['vcenter'][vname]['href'] = vhref
+        pvdc_data['vcenter'][vname]['id'] = vid
+        pvdc_data['vcenter'][vname]['vsnetworks'] = self.get_vsnetworks(vid)
 
         return pvdc_data
 
-    def get_pvdcs(self):
+    def get_pvdcs(self, detailed=True):
         endpoint = 'admin/extension/providerVdcReferences'
+        self.pvdcs = {}
         jdata = self.vcd_get(endpoint)
         jpvdcs = {}
-        for pvdc in jdata['vmext:VMWProviderVdcReferences'][
-                'vmext:ProviderVdcReference']:
-            jpvdcs[pvdc['@name']] = self.get_pvdc_details(
-                pvdc['@href'].split('providervdc/', 1)[-1])
+        data = []
+        if isinstance(jdata['vmext:VMWProviderVdcReferences'][
+                'vmext:ProviderVdcReference'], list):
+            data = jdata['vmext:VMWProviderVdcReferences'][
+                'vmext:ProviderVdcReference']
+        else:
+            data.append(jdata['vmext:VMWProviderVdcReferences'][
+                'vmext:ProviderVdcReference'])
+
+        for item in data:
+            pid = item['@href'].split('providervdc/', 1)[-1]
+            jpvdcs[item['@name']] = {}
+            if detailed:
+                jpvdcs[item['@name']] = self.get_pvdc_details(pid)
+            else:
+                jpvdcs[item['@name']]['id'] = pid
+                jpvdcs[item['@name']]['href'] = item['@href']
+
         self.pvdcs = jpvdcs
 
         return self.pvdcs
@@ -177,23 +253,346 @@ class VCDBaseActions(Action):
         for item in jdata['OrgList']['Org']:
             orgs[item['@name']] = {}
             orgs[item['@name']]['id'] = item['@href'].split('org/', 1)[-1]
+            orgs[item['@name']]['href'] = item['@href']
         return orgs
 
     def get_org(self, org_ref=None):
         org = {}
         org['vdcs'] = {}
-        endpoint = "org/%s" % org_ref
+        org['users'] = {}
+        org['catalogs'] = {}
+        endpoint = "admin/org/%s" % org_ref
         jdata = self.vcd_get(endpoint)
-        org['desc'] = jdata['Org']['Description']
-        org['fullname'] = jdata['Org']['FullName']
-        org['id'] = jdata['Org']['@id'].split('org:', 1)[-1]
-        for item in jdata['Org']['Link']:
-            if item['@type'] == 'application/vnd.vmware.vcloud.vdc+xml':
-                org['vdcs'][item['@name']] = {}
-                org['vdcs'][item['@name']]['id'] =\
-                    item['@href'].split('vdc/', 1)[-1]
+        org['desc'] = jdata['AdminOrg']['Description']
+        org['fullname'] = jdata['AdminOrg']['FullName']
+        org['name'] = jdata['AdminOrg']['@name']
+        org['id'] = jdata['AdminOrg']['@id'].split('org:', 1)[-1]
+
+        if jdata['AdminOrg']['Vdcs']:
+            for item in jdata['AdminOrg']['Vdcs']['Vdc']:
+                if isinstance(item, dict):
+                    if "@name" in item.keys():
+                        vdcid = item['@href'].split('vdc/', 1)[-1]
+                        org['vdcs'][item['@name']] = self.get_vdc(vdcid)
+
+        if "Users" in jdata['AdminOrg'].keys():
+            if jdata['AdminOrg']['Users'] is not None:
+                if isinstance(jdata['AdminOrg']['Users'][
+                        'UserReference'], list):
+                    for item in jdata['AdminOrg']['Users']['UserReference']:
+                        org['users'][item['@name']] = {}
+                        org['users'][item['@name']]['id'] =\
+                            item['@href'].split('user/', 1)[-1]
+                else:
+                    name = jdata['AdminOrg']['Users']['UserReference']['@name']
+                    nameid = jdata['AdminOrg']['Users']['UserReference'][
+                        '@href'].split('user/', 1)[-1]
+                    org['users'][name] = {}
+                    org['users'][name]['id'] = nameid
+
+        if jdata['AdminOrg']['Catalogs'] is not None:
+            catalogs = []
+            if isinstance(jdata['AdminOrg']['Catalogs'][
+                    'CatalogReference'], list):
+                catalogs = jdata['AdminOrg']['Catalogs']['CatalogReference']
+            else:
+                catalogs.append(jdata['AdminOrg']['Catalogs'][
+                    'CatalogReference'])
+            for item in catalogs:
+                org['catalogs'][item['@name']] = self.get_catalog(item[
+                    '@href'].split('catalog/', 1)[-1])
 
         return org
+
+    def get_catalog(self, catalogid):
+        catalog = {}
+        catalog['templates'] = {}
+        citems = []
+        endpoint = "admin/catalog/%s" % catalogid
+        jdata = self.vcd_get(endpoint)
+        catalog['id'] = jdata['AdminCatalog']['@id'].split('catalog:', 1)[-1]
+        catalog['href'] = jdata['AdminCatalog']['@href']
+        catalog['ispublished'] = jdata['AdminCatalog']['IsPublished']
+        if jdata['AdminCatalog']['CatalogItems'] is None:
+            return catalog
+        if isinstance(jdata['AdminCatalog']['CatalogItems'][
+                'CatalogItem'], list):
+            citems = jdata['AdminCatalog']['CatalogItems']['CatalogItem']
+        else:
+            citems.append(jdata['AdminCatalog']['CatalogItems']['CatalogItem'])
+
+        for item in citems:
+            catalog['templates'][item['@name']] = {}
+            catalog['templates'][item['@name']]['href'] = item['@href']
+            catalog['templates'][item['@name']]['id'] = item['@id']
+
+        return catalog
+
+    def get_vdc(self, vdc_ref=None):
+        vdc = {}
+        endpoint = 'admin/vdc/%s' % vdc_ref
+        jdata = self.vcd_get(endpoint)
+        vdc['name'] = jdata['AdminVdc']['@name']
+        vdc['href'] = jdata['AdminVdc']['@href']
+        vdc['isenabled'] = jdata['AdminVdc']['IsEnabled']
+        vdc['id'] = jdata['AdminVdc']['@href'].split('vdc/', 1)[-1]
+        vdc['allocationmodel'] = jdata['AdminVdc']['AllocationModel']
+        vdc['vmquota'] = jdata['AdminVdc']['VmQuota']
+        vdc['guaranteedcpupercentage'] =\
+            float(jdata['AdminVdc']['ResourceGuaranteedCpu']) * 100
+        vdc['guaranteedmemorypercentage'] =\
+            float(jdata['AdminVdc']['ResourceGuaranteedMemory']) * 100
+
+        vdc['vapps'] = {}
+        vdc['media'] = {}
+        vdc['templates'] = {}
+
+        vdcres = []
+        if jdata['AdminVdc']['ResourceEntities'] is not None:
+            vdcres = []
+            if isinstance(jdata['AdminVdc']['ResourceEntities'][
+                    'ResourceEntity'], list):
+                vdcres = jdata['AdminVdc']['ResourceEntities'][
+                    'ResourceEntity']
+            else:
+                vdcres.append(jdata['AdminVdc']['ResourceEntities'][
+                    'ResourceEntity'])
+            for item in vdcres:
+                if "api/media/" in item['@href']:
+                    vdc['media'][item['@name']] = {}
+                    vdc['media'][item['@name']]['id'] = item[
+                        '@href'].split('media/', 1)[-1]
+                    vdc['media'][item['@name']]['href'] = item['@href']
+                elif "api/vApp/" in item['@href']:
+                    vdc['vapps'][item['@name']] = self.get_vapp(
+                        item['@href'].split('vapp-', 1)[-1])
+                elif "api/vAppTemplate/" in item['@href']:
+                    vdc['templates'][item['@name']] = {}
+                    vdc['templates'][item['@name']]['id'] = item[
+                        '@href'].split('vappTemplate-', 1)[-1]
+                    vdc['templates'][item['@name']]['href'] = item['@href']
+
+        vdc['computecapacity'] = {}
+        for ctype in ['Cpu', 'Memory']:
+            vdc['computecapacity'][ctype] = {}
+            for citem in ['Units', 'Allocated', 'Limit',
+                          'Reserved', 'Used', 'OverHead']:
+                if citem in jdata['AdminVdc']['ComputeCapacity'][ctype].keys():
+                    vdc['computecapacity'][ctype][citem] = jdata['AdminVdc'][
+                        'ComputeCapacity'][ctype][citem]
+
+        vdc['storageprofiles'] = {}
+        storageprofiles = []
+        if isinstance(jdata['AdminVdc']['VdcStorageProfiles'][
+                'VdcStorageProfile'], list):
+            storageprofiles = jdata['AdminVdc']['VdcStorageProfiles'][
+                'VdcStorageProfile']
+        else:
+            storageprofiles.append(jdata['AdminVdc']['VdcStorageProfiles'][
+                'VdcStorageProfile'])
+        for item in storageprofiles:
+            vdc['storageprofiles'][item['@name']] = {}
+            vdc['storageprofiles'][item['@name']]['href'] = item['@href']
+
+        vdc['availablenetworks'] = {}
+        networklist = []
+        if "AvailableNetworks" in jdata['AdminVdc'].keys():
+            if jdata['AdminVdc']['AvailableNetworks'] is not None:
+                if isinstance(jdata['AdminVdc']['AvailableNetworks'][
+                        'Network'], list):
+                    networklist = jdata['AdminVdc']['AvailableNetworks'][
+                        'Network']
+                else:
+                    networklist.append(jdata['AdminVdc'][
+                        'AvailableNetworks']['Network'])
+
+                for item in networklist:
+                    vdc['availablenetworks'][item['@name']] = {}
+                    vdc['availablenetworks'][item['@name']][
+                        'href'] = item['@href']
+
+        return vdc
+
+    def get_vapp(self, vapp_id):
+        vapp = {}
+        endpoint = 'vApp/vapp-%s' % vapp_id
+        jdata = self.vcd_get(endpoint)
+
+        vapp['name'] = jdata['VApp']['@name']
+        vapp['href'] = jdata['VApp']['@href']
+        vapp['id'] = jdata['VApp']['@id']
+
+        vms = []
+        vapp['vms'] = {}
+        hwitems = ['rasd:Description',
+                   'rasd:ResourceSubType',
+                   'rasd:VirtualQuantity',
+                   'rasd:VirtualQuantityUnits',
+                   'rasd:ResourceType']
+
+        if "Children" in jdata['VApp'].keys():
+            if "Vm" in jdata['VApp']['Children'].keys():
+                if isinstance(jdata['VApp']['Children']['Vm'], list):
+                    vms = jdata['VApp']['Children']['Vm']
+                else:
+                    vms.append(jdata['VApp']['Children']['Vm'])
+        else:
+            vms = []
+
+        for item in vms:
+            vapp['vms'][item['@name']] = {}
+            vapp['vms'][item['@name']]['id'] = item['@id'].split(
+                'vcloud:vm:', 1)[-1]
+            vapp['vms'][item['@name']]['href'] = item['@href']
+            vapp['vms'][item['@name']]['spec'] = {}
+
+            for hw in item['ovf:VirtualHardwareSection']['ovf:Item']:
+                if "rasd:ElementName" in hw.keys():
+                    vapp['vms'][item['@name']]['spec'][hw[
+                        'rasd:ElementName']] = {}
+                    for hwitem in hwitems:
+                        if hwitem in hw.keys():
+                            vapp['vms'][item['@name']]['spec'][hw[
+                                'rasd:ElementName']][hwitem.split(
+                                    'rasd:', 1)[-1]] = hw[hwitem]
+                            if "rasd:Connection" in hw.keys():
+                                if "@vcloud:ipAddress" in hw[
+                                        'rasd:Connection'].keys():
+                                    vapp['vms'][item['@name']]['spec'][hw[
+                                        'rasd:ElementName']]['ip'] = hw[
+                                        'rasd:Connection'][
+                                        '@vcloud:ipAddress']
+
+        return vapp
+
+    def get_users(self):
+        users = {}
+        endpoint = "admin/users/query"
+        jdata = self.vcd_get(endpoint)
+        for item in jdata['QueryResultRecords']['UserRecord']:
+            users[item['@name']] = {}
+            users[item['@name']]['id'] = item['@href'].split('org/', 1)[-1]
+        return users
+
+    def get_extnet(self):
+        extnet = {}
+        networks = []
+        endpoint = "admin/extension/externalNetworkReferences"
+        jdata = self.vcd_get(endpoint)
+        if isinstance(jdata['vmext:VMWExternalNetworkReferences'][
+                'vmext:ExternalNetworkReference'], list):
+            networks = jdata['vmext:VMWExternalNetworkReferences'][
+                'vmext:ExternalNetworkReference']
+        else:
+            networks.append(jdata['vmext:VMWExternalNetworkReferences'][
+                'vmext:ExternalNetworkReference'])
+
+        for item in networks:
+            enhref = item['@href']
+            enid = enhref.split('externalnet/', 1)[-1]
+            extnet[item['@name']] = self.get_extnet_details(enid)
+
+        return extnet
+
+    def get_extnet_details(self, netid):
+        network = {}
+        endpoint = 'admin/extension/externalnet/%s' % netid
+        jdata = self.vcd_get(endpoint)
+        data = jdata['vmext:VMWExternalNetwork']
+        network['description'] = data['vcloud:Description']
+        network['id'] = data['@id']
+        network['href'] = data['@href']
+        config = data['vcloud:Configuration']
+        network['configuration'] = {}
+        network['configuration']['IPRanges'] = []
+
+        config_items = ['IsInherited',
+                        'Gateway',
+                        'Netmask',
+                        'Dns1',
+                        'Dns2',
+                        'IsEnabled']
+        config_set = config['vcloud:IpScopes']['vcloud:IpScope']
+        for item in config_items:
+            network['configuration'][item] = config_set['vcloud:' + item]
+
+        ipranges = []
+        if isinstance(config_set['vcloud:IpRanges']['vcloud:IpRange'], list):
+            ipranges = config_set['vcloud:IpRanges']['vcloud:IpRange']
+        else:
+            ipranges.append(config_set['vcloud:IpRanges']['vcloud:IpRange'])
+        for iprange in ipranges:
+            ip = str(iprange['vcloud:StartAddress'] + '-' +
+                     iprange['vcloud:EndAddress'])
+            network['configuration']['IPRanges'].append(ip)
+
+        return network
+
+    def get_vsphere(self):
+        vsphere = {}
+        servers = []
+        endpoint = 'admin/extension/vimServerReferences'
+        jdata = self.vcd_get(endpoint)
+        if isinstance(jdata['vmext:VMWVimServerReferences'][
+                'vmext:VimServerReference'], list):
+            servers = jdata['vmext:VMWVimServerReferences'][
+                'vmext:VimServerReference']
+        else:
+            servers.append(jdata['vmext:VMWVimServerReferences'][
+                'vmext:VimServerReference'])
+        for server in servers:
+            vsphere[server['@name']] = {}
+            vsphere[server['@name']]['href'] = server['@href']
+            vsphere[server['@name']]['id'] = server['@href'].split(
+                'vimServer/', 1)[-1]
+            vsphere[server['@name']]['vsnetworks'] = self.get_vsnetworks(
+                vsphere[server['@name']]['id'])
+        return vsphere
+
+    def get_vsnetworks(self, vsid):
+        networks = {}
+        endpoint = 'admin/extension/vimServer/%s/networks' % vsid
+        jdata = self.vcd_get(endpoint)
+        for dvgroup in jdata['vmext:VimObjectRefList'][
+                'vmext:VimObjectRefs'][
+                'vmext:VimObjectRef']:
+            if dvgroup['vmext:VimObjectType'] == "DV_PORTGROUP":
+                portgroups = self.get_dvportgroup(dvgroup['vmext:MoRef'], vsid)
+                for network in portgroups:
+                    networks[network] = {}
+                    networks[network] = portgroups[network]
+        return networks
+
+    def get_dvportgroup(self, moref, vsid):
+        portgroup = {}
+        data = []
+        endpoint = 'query?type=portgroup&format=records&filter=(moref==%s)'\
+            % (moref)
+        jdata = self.vcd_get(endpoint)
+        results = jdata['QueryResultRecords']['PortgroupRecord']
+        if isinstance(results, list):
+            data = results
+        else:
+            data.append(results)
+        for result in data:
+            if result['@vc'].endswith(vsid):
+                portgroup[result['@name']] = {}
+                portgroup[result['@name']]['moref'] = result['@moref']
+                portgroup[result['@name']]['type'] = result['@portgroupType']
+
+        return portgroup
+
+    def get_roleid(self, role):
+        endpoint = 'admin/roles/query'
+        roleid = ""
+        jdata = self.vcd_get(endpoint)
+        jdata = jdata['QueryResultRecords']['RoleRecord']
+        for item in jdata:
+            for element in item:
+                if item[element] == role:
+                    roleid = item['@href'].split('role/', 1)[-1]
+
+        return roleid
 
     def merge_dict(self, d1, d2):
         for k, v2 in d2.items():
@@ -211,3 +610,42 @@ class VCDBaseActions(Action):
                    'x-vcloud-authorization': self.vcd_auth}
         p = requests.get(url, headers=headers, verify=self.vcd_ssl)
         return xmltodict.parse(p.text)
+
+    def vcd_post(self, endpoint, xml, contenttype):
+        url = 'https://%s/api/%s' % (self.vcd_host, endpoint)
+        headers = {'Accept': 'application/*+xml;version=20.0',
+                   'x-vcloud-authorization': self.vcd_auth,
+                   'Content-Type': contenttype,
+                   # 'Content-Length': str(len(xml))}
+                   'Content-Length': str(len(tostring(xml)))}
+        payload = tostring(xml)
+        # payload = xml
+        payload = '<?xml version="1.0" encoding="UTF-8"?>' + payload
+        payload = payload.replace(">True<", ">true<")
+        payload = payload.replace(">False<", ">false<")
+        try:
+            p = requests.post(url, headers=headers,
+                              data=payload, verify=self.vcd_ssl)
+        except requests.exceptions.HTTPError as e:
+            raise Exception("Error: %s" % e)
+
+        return xmltodict.parse(p.text)
+
+    def convertjson(self, parent, jdata):
+        for item in jdata:
+            xmlitem = SubElement(parent, item)
+            if isinstance(jdata[item], dict):
+                self.convertjson(xmlitem, jdata[item])
+            else:
+                xmlitem.text = str(jdata[item])
+                parent.extend(xmlitem)
+        return parent
+
+    def check_ip(self, address):
+        result = False
+        ipreg = re.compile('^((25[0-5]|2[0-4][0-9]|[01]?[0-9]'
+                           '[0-9]?)\.){3}(25[0-5]|2[0-4][0-9]'
+                           '|[01]?[0-9][0-9]?)$')
+        if ipreg.match(address):
+            result = True
+        return result

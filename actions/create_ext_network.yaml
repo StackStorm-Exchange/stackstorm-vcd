@@ -1,0 +1,18 @@
+---
+  name: "create_ext_network"
+  runner_type: "python-script"
+  description: "Create an External network from VSphere port groups"
+  enabled: true
+  entry_point: "create_ext_network.py"
+  parameters:
+    vcloud:
+      type: "string"
+      description: "Which vcloud to connect to"
+      required: false
+      position: 0
+    data:
+      type: "object"
+      description: "Data structure for new networks"
+      required: true
+      position: 1
+

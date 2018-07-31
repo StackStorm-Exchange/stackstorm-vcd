@@ -16,8 +16,8 @@
 from lib.vcd import VCDBaseActions
 
 
-class getPVDCs(VCDBaseActions):
-    def run(self, vcloud="default", detailed=False):
+class getExtNet(VCDBaseActions):
+    def run(self, vcloud="default"):
         self.set_connection(vcloud)
         self.get_sessionid()
-        return self.get_pvdcs(detailed)
+        return self.get_extnet()
