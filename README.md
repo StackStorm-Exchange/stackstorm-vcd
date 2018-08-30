@@ -35,48 +35,105 @@ These actions are designed to work from the same input structure. it will use/ig
 Sample Imput:
 ```
 {"TEST":{
-  "Description":"Something to explain here",
-  "FullName":"Test Inc",
-  "vdcs":{
-    "test1":{
-      "Storage_Profile": "storage-premium",
-      "Description": "Test VDC 1",
-      "AllocationModel": "ReservationPool",
-      "PVDC": "PVDC-One",
-      "org_network": {
-        "net_name": {
-          "type": "bridged",
-          "parent": "external network name"
-        }
-      },
-      "Storage": {
-        "storage_profile": "storageprofilename",
-        "limit": 10000,
-        "unit": "MB"
-      },
-      "ComputeCapacity":{
-        "Cpu":{
-          "Units": "MHz",
-          "Allocatedpercent": 50,
-          "Limit": 10
+    "Description":"Do Robots dream of electric Vcloud Orgs",
+    "FullName":"Test Organisation",
+    "vdcs":{
+        "TEST1":{
+            "Storage":{
+                "Storage_Profile":"teststorageprofile",
+                "Limit":10000
+            },
+            "ComputeCapacity": {
+                "Cpu": {
+                    "Limit": 4000
+                },
+                "Memory": {
+                    "Limit": 6000
+                }
+            },            
+            "Description":"Test VDC 1",
+            "AllocationModel":"ReservationPool",
+            "PVDC":"testpvdc"
         },
-        "Memory":{
-          "Units": "MB"
-          "Allocatedpercent": 50,
-          "Limit": 100
+        "TEST2":{
+            "Storage":{
+                "Storage_Profile":"teststorageprofile",
+                "Limit":10000,
+                "Unit":"MB"
+            },
+            "ComputeCapacity": {
+                "Cpu": {
+                    "Allocatedpercent": 40,
+                    "Limit": 3000
+                }
+            },
+            "Description":"Test VDC 2",
+            "AllocationModel":"AllocationPool",
+            "PVDC":"testpvdc",
+            "vapps": {
+                "vapp1": {
+                    "Description": "Test2 - vapp1",
+                    "Network": "autonetworkone",
+                    "vms": {
+                        "vm1":{
+                            "powerOn": false,
+                            "Hostname": "testmachine1",
+                            "Description": "VM Description",
+                            "Catalog": "testcatalog",
+                            "Template": "CentOS7",
+                            "Templatevm": "CentOS7",
+                            "Network": {
+                                "Name": "autonetworkone",
+                                "IP": "127.0.0.20"
+                                },
+                            "cpu": 2,
+                            "memory": 8,
+                            "hdd": 60,
+                            "Storage_Profile": "teststorageprofile",
+                            "Password": "Pa55w0rd?"                            
+                        },
+                        "vm2":{
+                            "powerOn": false,
+                            "Hostname": "testmachine2",
+                            "Description": "VM Description",
+                            "Catalog": "testcatalog",
+                            "Template": "Win2016",
+                            "Templatevm": "Win2016",
+                            "Network": {
+                                "Name": "autonetworkone",
+                                "IP": "127.0.0.21"
+                                },
+                            "cpu": 3,
+                            "memory": 8,
+                            "hdd": 40,
+                            "Storage_Profile": "teststorageprofile",
+                            "Password": "Pa55w0rd?"                            
+                        }
+                    }
+                }
+            },
+            "org_network": {
+                "autonetworkone": {
+                    "type": "bridged",
+                    "parent": "vspherenetwork1"
+                }
+            }
         }
-        }
-      }
     },
-  "IsEnabled":true,
-  "org_admin":{
-    "admin1":{
-      "FullName": "Admin account 1",
-      "Password": "Password1",
-      "IsEnabled": true
-      }
+    "IsEnabled":true,
+    "org_admin":{
+        "TEST.admin1":{
+            "FullName":"Admin account 1",
+            "Password":"Password1",
+            "IsEnabled":true
+        },
+        "TEST.admin2":{
+            "FullName":"Admin account 2",
+            "Password":"Password1",
+            "IsEnabled":true
+        }
     }
-  }
+}
 }
 ```
 
@@ -106,3 +163,5 @@ for example: "new-vsphere-network|vsphere1"
 * Expand `create_vdc_network` to include other network types, not just `bridged`.
 * Review `get_orgs` to cope with large number of orgs without timing out. 
 * Create deploy Template actions.
+** Identify why Windows customisation during deploy action doesn't apply although CentOS does.
+* With the latest ST2 migrate to the Python 3 and the VCloud python module
