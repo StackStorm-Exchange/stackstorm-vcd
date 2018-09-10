@@ -163,5 +163,6 @@ for example: "new-vsphere-network|vsphere1"
 * Expand `create_vdc_network` to include other network types, not just `bridged`.
 * Review `get_orgs` to cope with large number of orgs without timing out. 
 * Create deploy Template actions.
-** Identify why Windows customisation during deploy action doesn't apply although CentOS does.
+** Identify why Windows OS customisation during deploy action doesn't apply although CentOS does.
+** Identify why Hardware customisation doesn't apply when deploying different VM templates.
 * With the latest ST2 migrate to the Python 3 and the VCloud python module
