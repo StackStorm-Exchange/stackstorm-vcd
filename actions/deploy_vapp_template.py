@@ -32,11 +32,13 @@ class deployVAPPTemplate(VCDBaseActions):
                     continue
 
                 org_details = self.get_org(all_orgs[org]['id'])
+                # Check VDC exists
                 if vdc not in org_details['vdcs'].keys():
                     post["%s (%s)" % (vdc.lower(), org.lower())] =\
                         "VDC does not exist"
                     continue
 
+                # Check VAPP defined in input data
                 if "vapps" not in data[org]['vdcs'][vdc].keys():
                     post["%s (%s)" % (vdc.lower(), org.lower())] =\
                         "No VAPPS defined"
@@ -107,6 +109,7 @@ class deployVAPPTemplate(VCDBaseActions):
                     continue
 
                 for vapp in data[org]['vdcs'][vdc]['vapps']:
+                    # Skip if VAPP already exists
                     if vapp in org_details['vdcs'][vdc]['vapps'].keys():
                         post["%s - %s" % (vdc.lower(), vapp.lower())] = \
                             "VAPP Already exists"
@@ -132,6 +135,7 @@ class deployVAPPTemplate(VCDBaseActions):
                     ovfinfo.text = "Configuration parameters for "\
                                    "logical networks"
 
+                    # Check Network exists
                     if "availablenetworks" in org_details['vdcs'][vdc].keys():
                         vappnetcon = SubElement(vappnetconfsec,
                                                 'NetworkConfig')
@@ -153,9 +157,11 @@ class deployVAPPTemplate(VCDBaseActions):
                             "No Network Found"
 
                     for vm in data[org]['vdcs'][vdc]['vapps'][vapp]['vms']:
+                        # Map vm data to easier variable
                         vmdata = data[org]['vdcs'][vdc][
                             'vapps'][vapp]['vms'][vm]
 
+                        # check template catalog for this Organisation
                         if vmdata['Catalog'] not in  \
                                 org_details['catalogs'].keys():
                             post["%s - %s" % (vmdata['Catalog'].lower(),
@@ -163,6 +169,7 @@ class deployVAPPTemplate(VCDBaseActions):
                                               "Catalog does not exist"
                             continue
 
+                        # Check vapp template exists for this Organisation
                         if vmdata['Template'] not in org_details['catalogs'][
                                 vmdata['Catalog']]['templates'].keys():
                             post["%s - %s" % (vmdata['Template'].lower(),
@@ -170,6 +177,7 @@ class deployVAPPTemplate(VCDBaseActions):
                                               "Template does not exist"
                             continue
 
+                        # Check VM template exist for Organisation
                         if vmdata['Templatevm'] in org_details['catalogs'][
                                 vmdata['Catalog']]['templates'][
                                 vmdata['Template']]['vms'].keys():
@@ -257,6 +265,7 @@ class deployVAPPTemplate(VCDBaseActions):
                                                'NetworkConnectionIndex')
                         vmnetindx.text = str(0)
 
+                        # SET IP if provided otherwise set to DHCP
                         if "IP" in vmdata['Network'].keys():
                             vmnetip = SubElement(vmnetcon, 'IpAddress')
                             vmnetip.text = vmdata['Network']['IP']
@@ -277,6 +286,7 @@ class deployVAPPTemplate(VCDBaseActions):
                                                      'IpAddressAllocationMode')
                             vmnetipmode.text = "DHCP"
 
+                        # Setup Hardware customisation section
                         vmhardwaresection = SubElement(vminstantiateparams,
                                                        'ovf:VirtualHardware'
                                                        'Section')
@@ -304,6 +314,7 @@ class deployVAPPTemplate(VCDBaseActions):
                                               'ovf:Info')
                         vmhwinfo.text = "Hardware Requirements"
 
+                        # Build CPU customisation
                         setcpu = SubElement(vmhardwaresection,
                                             'ovf:Item')
                         cpuallocationunits = SubElement(setcpu,
@@ -337,6 +348,7 @@ class deployVAPPTemplate(VCDBaseActions):
                         cpuweight = SubElement(setcpu, 'rasd:Weight')
                         cpuweight.text = str(0)
 
+                        # Build Memory customisation
                         setmemory = SubElement(vmhardwaresection,
                                                'ovf:Item')
                         memallocationUnits = SubElement(setmemory,
@@ -370,6 +382,7 @@ class deployVAPPTemplate(VCDBaseActions):
                         memweight = SubElement(setmemory, 'rasd:Weight')
                         memweight.text = str(0)
 
+                    # post to API endpoint
                     post["%s (%s)" % (vm.lower(), vapp.lower())] =\
                         self.vcd_post(endpoint,
                                       composevapp,
