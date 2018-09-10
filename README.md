@@ -30,6 +30,7 @@ Run `sudo st2ctl reload --register-configs` to get StackStorm to load the update
 * 'vcd.create_org_admin' - Create an Organisation Admin Account 
 * 'vcd.create_vdc' - Create an VDC  
 * 'vcd.create_vdc_network' - Create an VDC network. currently only bridge type is supported.
+* 'vcd.deploy_vapp_template' - Deploy a VAPP and listed VMs from Catalogs
 These actions are designed to work from the same input structure. it will use/ignore elements based on the actions function.
 
 Sample Imput:
