@@ -234,6 +234,22 @@ class VCDBaseActions(Action):
 
         return storage_profiles
 
+    def get_storage_profile(self, profile_id):
+        storage_profile = {}
+        endpoint = '/admin/vdcStorageProfile/%s' % profile_id
+        spdata = self.vcd_get(endpoint)
+        storage_profile['id'] = spdata['AdminVdcStorageProfile']['@id']
+        storage_profile['href'] = spdata['AdminVdcStorageProfile']['@href']
+        storage_profile['limit'] = spdata['AdminVdcStorageProfile']['Limit']
+        storage_profile['unit'] = spdata['AdminVdcStorageProfile']['Units']
+        spquery = '/query?type=adminOrgVdcStorageProfile&format=records&'\
+                  'filter=(href==%s)' % storage_profile['href']
+        spqdata = self.vcd_get(spquery)
+        storage_profile['used'] = spqdata['QueryResultRecords'][
+                                          'AdminOrgVdcStorageProfileRecord'][
+                                          '@storageUsedMB']
+        return storage_profile
+
     def get_network_pools(self):
         network_pools = {}
         endpoint = "admin/extension/networkPoolReferences"
@@ -323,10 +339,50 @@ class VCDBaseActions(Action):
 
         for item in citems:
             catalog['templates'][item['@name']] = {}
-            catalog['templates'][item['@name']]['href'] = item['@href']
-            catalog['templates'][item['@name']]['id'] = item['@id']
+            catalog['templates'][item['@name']] = \
+                self.get_template_details(item['@id'])
 
         return catalog
+
+    def get_catalog_item(self, itemid):
+        item = {}
+        endpoint = "catalogItem/%s" % itemid
+        jdata = self.vcd_get(endpoint)
+        item['name'] = jdata['CatalogItem']['Entity']['@name']
+        item['href'] = jdata['CatalogItem']['Entity']['@href']
+        item['id'] = jdata['CatalogItem']['Entity']['@href'].split(
+            'vAppTemplate/', 1)[-1]
+        item['type'] = jdata['CatalogItem']['Entity']['@type']
+
+        return item
+
+    def get_template_details(self, itemid):
+        template = {}
+        citemendpoint = "catalogItem/%s" % itemid
+        cidata = self.vcd_get(citemendpoint)
+        templateid = cidata['CatalogItem']['Entity']['@href'].split(
+            'vAppTemplate/', 1)[-1]
+
+        endpoint = "vAppTemplate/%s" % templateid
+        details = self.vcd_get(endpoint)
+        template['name'] = details['VAppTemplate']['@name']
+        template['id'] = details['VAppTemplate']['@id'].split(
+            'vapptemplate:', 1)[-1]
+        template['href'] = details['VAppTemplate']['@href']
+        template['vms'] = {}
+        vmres = []
+        if "Vm" in details['VAppTemplate']['Children'].keys():
+            if isinstance(details['VAppTemplate']['Children']['Vm'], list):
+                vmres = details['VAppTemplate']['Children']['Vm']
+            else:
+                vmres.append(details['VAppTemplate']['Children']['Vm'])
+            for vm in vmres:
+                template['vms'][vm['@name']] = {}
+                template['vms'][vm['@name']]['id'] = \
+                    vm['@id'].split('vm:', 1)[-1]
+                template['vms'][vm['@name']]['href'] = vm['@href']
+
+        return template
 
     def get_vdc(self, vdc_ref=None):
         vdc = {}
@@ -391,8 +447,9 @@ class VCDBaseActions(Action):
             storageprofiles.append(jdata['AdminVdc']['VdcStorageProfiles'][
                 'VdcStorageProfile'])
         for item in storageprofiles:
-            vdc['storageprofiles'][item['@name']] = {}
-            vdc['storageprofiles'][item['@name']]['href'] = item['@href']
+            sp_id = item['@href'].split('vdcStorageProfile/', 1)[-1]
+            vdc['storageprofiles'][item['@name']] = \
+                self.get_storage_profile(sp_id)
 
         vdc['availablenetworks'] = {}
         networklist = []
@@ -428,6 +485,7 @@ class VCDBaseActions(Action):
                    'rasd:ResourceSubType',
                    'rasd:VirtualQuantity',
                    'rasd:VirtualQuantityUnits',
+                   'rasd:InstanceID',
                    'rasd:ResourceType']
 
         if "Children" in jdata['VApp'].keys():
@@ -462,8 +520,35 @@ class VCDBaseActions(Action):
                                         'rasd:ElementName']]['ip'] = hw[
                                         'rasd:Connection'][
                                         '@vcloud:ipAddress']
+            vapp['vms'][item['@name']]['networkconnections'] = \
+                self.get_vm_network(vapp['vms'][item['@name']]['id'])
 
         return vapp
+
+    def get_vm_network(self, vmid):
+        network = {}
+        networklist = []
+        endpoint = "vApp/vm-%s/networkConnectionSection" % vmid
+        ndata = self.vcd_get(endpoint)
+        if "NetworkConnection" not in ndata['NetworkConnectionSection'].keys():
+            return network
+        if isinstance(ndata['NetworkConnectionSection'][
+                'NetworkConnection'], list):
+            networklist = ndata['NetworkConnectionSection'][
+                                'NetworkConnection']
+        else:
+            networklist.append(ndata['NetworkConnectionSection'][
+                               'NetworkConnection'])
+
+        for net in networklist:
+            nic = 'connection' + net['NetworkConnectionIndex']
+            network[nic] = {}
+            network[nic]['network'] = net['@network']
+            network[nic]['connected'] = net['IsConnected']
+            network[nic]['MAC'] = net['MACAddress']
+            network[nic]['IPMode'] = net['IpAddressAllocationMode']
+
+        return network
 
     def get_users(self):
         users = {}
