@@ -365,6 +365,8 @@ class VCDBaseActions(Action):
 
         endpoint = "vAppTemplate/%s" % templateid
         details = self.vcd_get(endpoint)
+        if "Error" in details.keys():
+            return template
         template['name'] = details['VAppTemplate']['@name']
         template['id'] = details['VAppTemplate']['@id'].split(
             'vapptemplate:', 1)[-1]
