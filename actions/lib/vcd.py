@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
-import xmltodict
 import collections
 import re
-from st2actions.runners.pythonrunner import Action
 from xml.etree.ElementTree import SubElement, tostring
+import requests
+import xmltodict
+from st2actions.runners.pythonrunner import Action
 
 
 class VCDBaseActions(Action):
@@ -51,8 +51,9 @@ class VCDBaseActions(Action):
     def get_sessionid(self):
         url = 'https://%s/api/sessions' % self.vcd_host
         headers = {'Accept': 'application/*+xml;version=5.1'}
-        p = requests.post(url, headers=headers, auth=(self.vcd_user +
-                          "@SYSTEM", self.vcd_pass), verify=self.vcd_ssl)
+        p = requests.post(url, headers=headers, auth=(self.vcd_user +  # noqa: W504
+                                                      "@SYSTEM", self.vcd_pass),
+                          verify=self.vcd_ssl)
         self.vcd_auth = p.headers['x-vcloud-authorization']
 
         return self.vcd_auth
@@ -80,15 +81,12 @@ class VCDBaseActions(Action):
         try:
             networks = []
             if isinstance(jdata['vmext:VMWProviderVdc'][
-                    'vcloud:AvailableNetworks'][
-                    'vcloud:Network'], list):
+                    'vcloud:AvailableNetworks']['vcloud:Network'], list):
                 networks = jdata['vmext:VMWProviderVdc'][
-                    'vcloud:AvailableNetworks'][
-                    'vcloud:Network']
+                    'vcloud:AvailableNetworks']['vcloud:Network']
             else:
                 networks.append(jdata['vmext:VMWProviderVdc'][
-                    'vcloud:AvailableNetworks'][
-                    'vcloud:Network'])
+                    'vcloud:AvailableNetworks']['vcloud:Network'])
             for item in networks:
                 pvdc_data['external_networks'][item['@name']] = {}
                 pvdc_data['external_networks'][item['@name']][
@@ -100,36 +98,31 @@ class VCDBaseActions(Action):
 
         try:
             for item in jdata['vmext:VMWProviderVdc'][
-                    'vcloud:ComputeCapacity'][
-                    'vcloud:Cpu']:
+                    'vcloud:ComputeCapacity']['vcloud:Cpu']:
                 pvdc_data['compute_capacity']['cpu'][str(item).split(
                     'vcloud:', 1)[-1]] = jdata['vmext:VMWProviderVdc'][
-                    'vcloud:ComputeCapacity']['vcloud:Cpu'][item]
+                        'vcloud:ComputeCapacity']['vcloud:Cpu'][item]
         except Exception:
             pass
 
         try:
             for item in jdata['vmext:VMWProviderVdc'][
-                    'vcloud:ComputeCapacity'][
-                    'vcloud:Memory']:
+                    'vcloud:ComputeCapacity']['vcloud:Memory']:
                 pvdc_data['compute_capacity']['memory'][str(item).split(
                     'vcloud:', 1)[-1]] = jdata['vmext:VMWProviderVdc'][
-                    'vcloud:ComputeCapacity']['vcloud:Memory'][item]
+                        'vcloud:ComputeCapacity']['vcloud:Memory'][item]
         except Exception:
             pass
 
         try:
             storageprofiles = []
             if isinstance(jdata['vmext:VMWProviderVdc'][
-                    'vcloud:StorageProfiles'][
-                    'vcloud:ProviderVdcStorageProfile'], list):
+                    'vcloud:StorageProfiles']['vcloud:ProviderVdcStorageProfile'], list):
                 storageprofiles = jdata['vmext:VMWProviderVdc'][
-                    'vcloud:StorageProfiles'][
-                    'vcloud:ProviderVdcStorageProfile']
+                    'vcloud:StorageProfiles']['vcloud:ProviderVdcStorageProfile']
             else:
                 storageprofiles.append(jdata['vmext:VMWProviderVdc'][
-                    'vcloud:StorageProfiles'][
-                    'vcloud:ProviderVdcStorageProfile'])
+                    'vcloud:StorageProfiles']['vcloud:ProviderVdcStorageProfile'])
             for item in storageprofiles:
                 pvdc_data['storage_profiles'][item['@name']] = {}
                 pvdc_data['storage_profiles'][item['@name']][
@@ -151,11 +144,9 @@ class VCDBaseActions(Action):
         if jdata['vmext:VMWProviderVdc']['vcloud:NetworkPoolReferences']\
                 is not None:
             if isinstance(jdata['vmext:VMWProviderVdc'][
-                    'vcloud:NetworkPoolReferences'][
-                    'vcloud:NetworkPoolReference'], list):
+                    'vcloud:NetworkPoolReferences']['vcloud:NetworkPoolReference'], list):
                 for item in jdata['vmext:VMWProviderVdc'][
-                        'vcloud:NetworkPoolReferences'][
-                        'vcloud:NetworkPoolReference']:
+                        'vcloud:NetworkPoolReferences']['vcloud:NetworkPoolReference']:
                     pvdc_data['network_pools'][item['@name']] = {}
                     pvdc_data['network_pools'][item['@name']][
                         'href'] = item['@href']
@@ -163,16 +154,12 @@ class VCDBaseActions(Action):
                         item['@href'].split('networkPool/', 1)[-1]
             else:
                 name = jdata['vmext:VMWProviderVdc'][
-                    'vcloud:NetworkPoolReferences'][
-                    'vcloud:NetworkPoolReference']['@name']
+                    'vcloud:NetworkPoolReferences']['vcloud:NetworkPoolReference']['@name']
                 nid = jdata['vmext:VMWProviderVdc'][
                     'vcloud:NetworkPoolReferences'][
-                    'vcloud:NetworkPoolReference'][
-                    '@href'].split('networkPool/', 1)[-1]
+                        'vcloud:NetworkPoolReference']['@href'].split('networkPool/', 1)[-1]
                 href = jdata['vmext:VMWProviderVdc'][
-                    'vcloud:NetworkPoolReferences'][
-                    'vcloud:NetworkPoolReference'][
-                    '@href']
+                    'vcloud:NetworkPoolReferences']['vcloud:NetworkPoolReference']['@href']
                 pvdc_data['network_pools'][name] = {}
                 pvdc_data['network_pools'][name]['href'] = href
                 pvdc_data['network_pools'][name]['id'] = nid
@@ -246,8 +233,7 @@ class VCDBaseActions(Action):
                   'filter=(href==%s)' % storage_profile['href']
         spqdata = self.vcd_get(spquery)
         storage_profile['used'] = spqdata['QueryResultRecords'][
-                                          'AdminOrgVdcStorageProfileRecord'][
-                                          '@storageUsedMB']
+            'AdminOrgVdcStorageProfileRecord']['@storageUsedMB']
         return storage_profile
 
     def get_network_pools(self):
@@ -520,8 +506,7 @@ class VCDBaseActions(Action):
                                         'rasd:Connection'].keys():
                                     vapp['vms'][item['@name']]['spec'][hw[
                                         'rasd:ElementName']]['ip'] = hw[
-                                        'rasd:Connection'][
-                                        '@vcloud:ipAddress']
+                                            'rasd:Connection']['@vcloud:ipAddress']
             vapp['vms'][item['@name']]['networkconnections'] = \
                 self.get_vm_network(vapp['vms'][item['@name']]['id'])
 
@@ -536,11 +521,9 @@ class VCDBaseActions(Action):
             return network
         if isinstance(ndata['NetworkConnectionSection'][
                 'NetworkConnection'], list):
-            networklist = ndata['NetworkConnectionSection'][
-                                'NetworkConnection']
+            networklist = ndata['NetworkConnectionSection']['NetworkConnection']
         else:
-            networklist.append(ndata['NetworkConnectionSection'][
-                               'NetworkConnection'])
+            networklist.append(ndata['NetworkConnectionSection']['NetworkConnection'])
 
         for net in networklist:
             nic = 'connection' + net['NetworkConnectionIndex']
@@ -609,7 +592,7 @@ class VCDBaseActions(Action):
         else:
             ipranges.append(config_set['vcloud:IpRanges']['vcloud:IpRange'])
         for iprange in ipranges:
-            ip = str(iprange['vcloud:StartAddress'] + '-' +
+            ip = str(iprange['vcloud:StartAddress'] + '-' +  # noqa: W504
                      iprange['vcloud:EndAddress'])
             network['configuration']['IPRanges'].append(ip)
 
@@ -641,8 +624,7 @@ class VCDBaseActions(Action):
         endpoint = 'admin/extension/vimServer/%s/networks' % vsid
         jdata = self.vcd_get(endpoint)
         for dvgroup in jdata['vmext:VimObjectRefList'][
-                'vmext:VimObjectRefs'][
-                'vmext:VimObjectRef']:
+                'vmext:VimObjectRefs']['vmext:VimObjectRef']:
             if dvgroup['vmext:VimObjectType'] == "DV_PORTGROUP":
                 portgroups = self.get_dvportgroup(dvgroup['vmext:MoRef'], vsid)
                 for network in portgroups:
@@ -684,7 +666,7 @@ class VCDBaseActions(Action):
     def merge_dict(self, d1, d2):
         for k, v2 in d2.items():
             v1 = d1.get(k)
-            if (isinstance(v1, collections.Mapping) and
+            if (isinstance(v1, collections.Mapping) and  # noqa: W504
                     isinstance(v2, collections.Mapping)):
                 self.merge_dict(v1, v2)
             else:
