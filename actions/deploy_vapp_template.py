@@ -165,16 +165,14 @@ class deployVAPPTemplate(VCDBaseActions):
                         if vmdata['Catalog'] not in  \
                                 org_details['catalogs'].keys():
                             post["%s - %s" % (vmdata['Catalog'].lower(),
-                                              vm.lower())] =\
-                                              "Catalog does not exist"
+                                              vm.lower())] = "Catalog does not exist"
                             continue
 
                         # Check vapp template exists for this Organisation
                         if vmdata['Template'] not in org_details['catalogs'][
                                 vmdata['Catalog']]['templates'].keys():
                             post["%s - %s" % (vmdata['Template'].lower(),
-                                              vm.lower())] = \
-                                              "Template does not exist"
+                                              vm.lower())] = "Template does not exist"
                             continue
 
                         # Check VM template exist for Organisation
@@ -186,8 +184,7 @@ class deployVAPPTemplate(VCDBaseActions):
                                 vmdata['Templatevm']]['href']
                         else:
                             post["%s - %s" % (vmdata['Templatevm'].lower(),
-                                              vm.lower())] = \
-                                              "VM does not exist"
+                                              vm.lower())] = "VM does not exist"
                             continue
 
                         vmsourceditem = SubElement(composevapp, 'SourcedItem')
@@ -304,7 +301,7 @@ class deployVAPPTemplate(VCDBaseActions):
                                               'http://www.vmware.'
                                               'com/vcloud/v1.5')
                         vmhardwaresection.set('vcloud:href',
-                                              vmref +
+                                              vmref +  # noqa: W504
                                               '/virtualHardwareSection/')
                         vmhardwaresection.set('vcloud:type',
                                               'application/vnd.vmware.vcloud.'
