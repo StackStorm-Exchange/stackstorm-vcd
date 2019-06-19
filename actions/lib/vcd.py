@@ -713,7 +713,7 @@ class VCDBaseActions(Action):
     def check_ip(self, address):
         result = False
         ipreg = re.compile('^((25[0-5]|2[0-4][0-9]|[01]?[0-9]'
-                           '[0-9]?)\.){3}(25[0-5]|2[0-4][0-9]'
+                           r'[0-9]?)\.){3}(25[0-5]|2[0-4][0-9]'
                            '|[01]?[0-9][0-9]?)$')
         if ipreg.match(address):
             result = True
