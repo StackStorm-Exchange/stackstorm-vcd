@@ -5,8 +5,8 @@ version: 0.2.5
 author: Paul Mulvihill
 email: paul.mulvihill@pulsant.com
 keywords:
-    - vmware
-    - vcloud
+  - vmware
+  - vcloud
 
 python_versions:
   - "2"
