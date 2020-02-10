@@ -4,33 +4,33 @@
 
 Basic actions to integrate with VCloud Director.
 
-
 ## Connection Configuration
 
 Copy the sample configuration file [vcd.yaml.example](./vcd.yaml.example) to `/opt/stackstorm/configs/vcd.yaml`
 and edit as required. Required fields for connecting to vcloud are address, user and password.
 
-Run `sudo st2ctl reload --register-configs` to get StackStorm to load the updated configuration.
+> Do not use `st2 pack config vcd` as this pack uses complex nested configuration
 
+Run `sudo st2ctl reload --register-configs` to get StackStorm to load the updated configuration.
 
 ## Actions
 ### Get Actions
-* 'vcd.get_extnet' - Retrieve external networks  
-* 'vcd.get_org' - Retrieve details for an Organisations 
-* 'vcd.get_orgs' - Retrieve list of Organisations 
-* 'vcd.get_pvdcs' - Retrieve list of Provider VDCs 
-* 'vcd.get_vapp' - Retrieve details for a vApp 
-* 'vcd.get_vdc' - Retrieve details for a VDC  
-* 'vcd.get_vsnetworks' - Retrieve VSphere networks  
-* 'vcd.get_vsphere' - Retrieve VSphere servers  
+* `vcd.get_extnet` - Retrieve external networks  
+* `vcd.get_org` - Retrieve details for an Organisations 
+* `vcd.get_orgs` - Retrieve list of Organisations 
+* `vcd.get_pvdcs` - Retrieve list of Provider VDCs 
+* `vcd.get_vapp` - Retrieve details for a vApp 
+* `vcd.get_vdc` - Retrieve details for a VDC  
+* `vcd.get_vsnetworks` - Retrieve VSphere networks  
+* `vcd.get_vsphere` - Retrieve VSphere servers  
 
 ### Create Actions
 #### Org Actions
-* 'vcd.create_org' - Create an Organisation  
-* 'vcd.create_org_admin' - Create an Organisation Admin Account 
-* 'vcd.create_vdc' - Create an VDC  
-* 'vcd.create_vdc_network' - Create an VDC network. currently only bridge type is supported.
-* 'vcd.deploy_vapp_template' - Deploy a VAPP and listed VMs from Catalogs
+* `vcd.create_org` - Create an Organisation  
+* `vcd.create_org_admin` - Create an Organisation Admin Account 
+* `vcd.create_vdc` - Create an VDC  
+* `vcd.create_vdc_network` - Create an VDC network. currently only bridge type is supported.
+* `vcd.deploy_vapp_template` - Deploy a VAPP and listed VMs from Catalogs
 These actions are designed to work from the same input structure. it will use/ignore elements based on the actions function.
 
 Sample Imput:
