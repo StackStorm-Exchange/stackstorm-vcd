@@ -1,38 +1,63 @@
 ---
-version: '2.0'
-
-vcd.setup_org_admin_vdc_vdcnetwork:
-  description: "Create Org, Admin user, VDCs and VDC Networks"
-  input:
-    - vcloud
-    - data
-  tasks:
-    setup_org:
-      action: vcd.create_org
-      wait-after: 10
-      input:
-        vcloud: <% $.vcloud %>
-        data: <% $.data %>
-      on-success:
-        - setup_org_admin
-    setup_org_admin:
-      action: vcd.create_org_admin
-      wait-after: 5
-      input:
-        vcloud: <% $.vcloud %>
-        data: <% $.data %>
-      on-success:
-        - setup_vdc
-    setup_vdc:
-      action: vcd.create_vdc
-      wait-after: 10
-      input:
-        vcloud: <% $.vcloud %>
-        data: <% $.data %>
-      on-success:
-        - setup_vdc_network
-    setup_vdc_network:
-      action: vcd.create_vdc_network
-      input:
-        vcloud: <% $.vcloud %>
-        data: <% $.data %>
+version: '1.0'
+description: Create Org, Admin user, VDCs and VDC Networks
+input:
+  - vcloud
+  - data
+tasks:
+  setup_org:
+    action: vcd.create_org
+    input:
+      vcloud: <% ctx().vcloud %>
+      data: <% ctx().data %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - wait_after_setup_org
+  wait_after_setup_org:
+    action: core.pause
+    input:
+      max_pause: 10
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - setup_org_admin
+  setup_org_admin:
+    action: vcd.create_org_admin
+    input:
+      vcloud: <% ctx().vcloud %>
+      data: <% ctx().data %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - wait_after_setup_org_admin
+  wait_after_setup_org_admin:
+    action: core.pause
+    input:
+      max_pause: 5
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - setup_vdc
+  setup_vdc:
+    action: vcd.create_vdc
+    input:
+      vcloud: <% ctx().vcloud %>
+      data: <% ctx().data %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - wait_after_setup_vdc
+  wait_after_setup_vdc:
+    action: core.pause
+    input:
+      max_pause: 10
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - setup_vdc_network
+  setup_vdc_network:
+    action: vcd.create_vdc_network
+    input:
+      vcloud: <% ctx().vcloud %>
+      data: <% ctx().data %>

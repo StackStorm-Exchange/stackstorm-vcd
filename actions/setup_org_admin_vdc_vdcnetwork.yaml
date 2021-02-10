@@ -1,20 +1,20 @@
 ---
-description: "Setup Org, Admin Users, VDCs and Org VDC Networks"
+description: Setup Org, Admin Users, VDCs and Org VDC Networks
 enabled: true
-entry_point: 'workflows/setup_org_admin_vdc_vdcnetwork.yaml'
-name: "setup_org_admin_vdc_vdcnetwork"
-pack: "vcd"
+entry_point: workflows/setup_org_admin_vdc_vdcnetwork.yaml
+name: setup_org_admin_vdc_vdcnetwork
+pack: vcd
 
-runner_type: "mistral-v2"
+runner_type: orquesta
 
 parameters:
   vcloud:
-    type: "string"
-    description: "vCloud to connect to"
+    type: string
+    description: vCloud to connect to
     position: 0
     required: false
   data:
-    type: "object"
-    description: "json object showing setup"
+    type: object
+    description: json object showing setup
     position: 1
     required: true
