@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
+from collections.abc import Mapping
 import re
 from xml.etree.ElementTree import SubElement, tostring
 import requests
@@ -666,8 +666,8 @@ class VCDBaseActions(Action):
     def merge_dict(self, d1, d2):
         for k, v2 in d2.items():
             v1 = d1.get(k)
-            if (isinstance(v1, collections.Mapping) and  # noqa: W504
-                    isinstance(v2, collections.Mapping)):
+            if (isinstance(v1, Mapping) and  # noqa: W504
+                    isinstance(v2, Mapping)):
                 self.merge_dict(v1, v2)
             else:
                 d1[k] = v2

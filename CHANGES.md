@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.2
+
+* Fixed CI errors. Mapping should be imported from collections.abc as of python 3.10
+
 ## 1.0.0
 
 * Drop Python 2.7 support
